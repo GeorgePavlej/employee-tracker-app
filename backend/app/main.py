@@ -3,10 +3,16 @@ from datetime import date, datetime
 from app.database import SessionLocal
 from app.models import Employee, TimeLog, Shift, LeaveRequest
 from app.schemas import ShiftCreate, LeaveRequestCreate
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import (
+    FastAPI,
+    Depends,
+    HTTPException,
+    status,
+)
 from fastapi.params import Query
 from sqlalchemy.orm import Session
 from starlette.middleware.cors import CORSMiddleware
+
 
 app = FastAPI()
 
@@ -46,7 +52,7 @@ def clock_in(employee_id: int, db: Session = Depends(get_db)):
         TimeLog.clock_in_time != None
     ).first()
     if existing_log:
-        raise HTTPException(status_code=400, detail="Already clocked in today.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Already clocked in today.")
     new_log = TimeLog(employee_id=employee_id, date=today, clock_in_time=now)
     db.add(new_log)
     db.commit()
@@ -64,7 +70,7 @@ def clock_out(employee_id: int, db: Session = Depends(get_db)):
         TimeLog.clock_out_time == None
     ).first()
     if not log:
-        raise HTTPException(status_code=400, detail="Not clocked in or already clocked out.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Not clocked in or already clocked out.")
     log.clock_out_time = now
     db.commit()
     return {"message": f"Clocked out at {now.strftime('%H:%M:%S')}"}
@@ -105,7 +111,7 @@ def end_lunch(employee_id: int, db: Session = Depends(get_db)):
     ).first()
     if not log:
         raise HTTPException(
-            status_code=400,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cannot end lunch. Ensure you have started lunch and are still clocked in."
         )
     log.lunch_end_time = now
@@ -118,7 +124,7 @@ def get_logs(employee_id: int, month_year: str, db: Session = Depends(get_db)):
     try:
         month, year = map(int, month_year.split("-"))
     except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid month-year format. Use MM-YYYY.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid month-year format. Use MM-YYYY.")
     start_date = date(year, month, 1)
     if month == 12:
         end_date = date(year + 1, 1, 1)
@@ -154,13 +160,13 @@ def get_logs(employee_name: str = None, date_from: str = None, date_to: str = No
             date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d").date()
             query = query.filter(TimeLog.date >= date_from_parsed)
         except ValueError:
-            raise HTTPException(status_code=400, detail="Invalid date_from format. Use YYYY-MM-DD.")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid date_from format. Use YYYY-MM-DD.")
     if date_to:
         try:
             date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d").date()
             query = query.filter(TimeLog.date <= date_to_parsed)
         except ValueError:
-            raise HTTPException(status_code=400, detail="Invalid date_to format. Use YYYY-MM-DD.")
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid date_to format. Use YYYY-MM-DD.")
 
     logs = query.order_by(TimeLog.date.desc()).all()
 
@@ -189,7 +195,7 @@ def create_shift(shift: ShiftCreate, db: Session = Depends(get_db)):
 
     if on_leave:
         raise HTTPException(
-            status_code=400,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cannot schedule shift: The employee is on approved leave for this date."
         )
 
@@ -264,7 +270,7 @@ def submit_leave_request(leave_request: LeaveRequestCreate, db: Session = Depend
         LeaveRequest.end_date >= leave_request.start_date
     ).first()
     if overlapping_leave:
-        raise HTTPException(status_code=400, detail="Leave request overlaps with existing approved leave.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Leave request overlaps with existing approved leave.")
 
     new_leave_request = LeaveRequest(**leave_request.dict())
     db.add(new_leave_request)
