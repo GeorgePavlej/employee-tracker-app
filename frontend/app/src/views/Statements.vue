@@ -369,6 +369,8 @@
 </template>
 
 <script>
+
+const baseURL = process.env.VUE_APP_API_URL;
 export default {
   name: 'Statements',
 
@@ -444,7 +446,7 @@ export default {
 
     // ---- EMPLOYEES ----
 loadEmployees() {
-  fetch('http://localhost:8000/employees/')
+  fetch(`${baseURL}/employees/`)
     .then(res => res.json())
     .then(data => {
       console.log('Employees fetched:', data)
@@ -457,7 +459,7 @@ loadEmployees() {
     // ---- CLOCK IN/OUT ----
     clockIn() {
       if (!this.selectedEmployeeClock) return
-      fetch(`http://localhost:8000/clock_in/?employee_id=${this.selectedEmployeeClock}`, { method: 'POST' })
+      fetch(`${baseURL}/clock_in/?employee_id=${this.selectedEmployeeClock}`, { method: 'POST' })
         .then(res => res.json())
         .then(data => {
           alert(data.message || data.detail)
@@ -469,7 +471,7 @@ loadEmployees() {
     },
     clockOut() {
       if (!this.selectedEmployeeClock) return
-      fetch(`http://localhost:8000/clock_out/?employee_id=${this.selectedEmployeeClock}`, { method: 'POST' })
+      fetch(`${baseURL}/clock_out/?employee_id=${this.selectedEmployeeClock}`, { method: 'POST' })
         .then(res => res.json())
         .then(data => {
           alert(data.message || data.detail)
@@ -481,7 +483,7 @@ loadEmployees() {
     },
     startLunch() {
       if (!this.selectedEmployeeClock) return
-      fetch(`http://localhost:8000/start_lunch/?employee_id=${this.selectedEmployeeClock}`, { method: 'POST' })
+      fetch(`${baseURL}/start_lunch/?employee_id=${this.selectedEmployeeClock}`, { method: 'POST' })
         .then(res => res.json())
         .then(data => {
           alert(data.message || data.detail)
@@ -493,7 +495,7 @@ loadEmployees() {
     },
     endLunch() {
       if (!this.selectedEmployeeClock) return
-      fetch(`http://localhost:8000/end_lunch/?employee_id=${this.selectedEmployeeClock}`, { method: 'POST' })
+      fetch(`${baseURL}/end_lunch/?employee_id=${this.selectedEmployeeClock}`, { method: 'POST' })
         .then(res => res.json())
         .then(data => {
           alert(data.message || data.detail)
@@ -510,7 +512,7 @@ loadEmployees() {
       const dateFrom = this.logsFilter.dateFrom
       const dateTo = this.logsFilter.dateTo
 
-      let url = `http://localhost:8000/logs/?`
+      let url = `${baseURL}/logs/?`
       const params = []
       if (nameFilter) {
         params.push(`employee_name=${encodeURIComponent(nameFilter)}`)
@@ -542,7 +544,7 @@ loadEmployees() {
         return
       }
 
-      fetch('http://localhost:8000/shifts/', {
+      fetch(`${baseURL}/shifts/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -576,7 +578,7 @@ loadEmployees() {
     },
     loadShifts() {
       const { employee_id, date_from, date_to } = this.shiftFilter
-      let url = 'http://localhost:8000/shifts/?'
+      let url = `${baseURL}/shifts/?`
       const params = []
 
       if (employee_id) {
@@ -609,7 +611,7 @@ loadEmployees() {
         return
       }
 
-      const url = `http://localhost:8000/reports/attendance/?employee_id=${employee_id}&date_from=${date_from}&date_to=${date_to}`
+      const url = `${baseURL}/reports/attendance/?employee_id=${employee_id}&date_from=${date_from}&date_to=${date_to}`
       fetch(url)
         .then(res => res.json())
         .then(data => {
@@ -629,7 +631,7 @@ loadEmployees() {
         return
       }
 
-      fetch('http://localhost:8000/leave_requests/', {
+      fetch(`${baseURL}/leave_requests/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -661,7 +663,7 @@ loadEmployees() {
         })
     },
     loadLeaveRequests() {
-      fetch('http://localhost:8000/leave_requests/')
+      fetch(`${baseURL}/leave_requests/`)
         .then(res => res.json())
         .then(data => {
           this.leaveRequests = data
@@ -672,7 +674,7 @@ loadEmployees() {
         })
     },
     updateLeaveRequestStatus(leaveId, status) {
-      fetch(`http://localhost:8000/leave_requests/${leaveId}/?status=${status}`, { method: 'PUT' })
+      fetch(`${baseURL}/leave_requests/${leaveId}/?status=${status}`, { method: 'PUT' })
         .then(res => {
           if (!res.ok) {
             return res.json().then(data => {

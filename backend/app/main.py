@@ -306,3 +306,8 @@ def update_leave_request_status(leave_id: int, status: str = Query(...), db: Ses
     leave_request.status = status
     db.commit()
     return leave_request
+
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
