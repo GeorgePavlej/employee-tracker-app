@@ -2,7 +2,12 @@ from datetime import date, datetime
 
 from app.database import SessionLocal
 from app.models import Employee, TimeLog, Shift, LeaveRequest
-from app.schemas import ShiftCreate, LeaveRequestCreate
+from app.schemas import (
+    ShiftCreate,
+    LeaveRequestCreate,
+    EmployeeCreate,
+    EmployeeUpdate,
+)
 from fastapi import (
     FastAPI,
     Depends,
@@ -10,6 +15,7 @@ from fastapi import (
     status,
 )
 from fastapi.params import Query
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from starlette.middleware.cors import CORSMiddleware
 
@@ -35,11 +41,105 @@ def get_db():
 
 @app.get("/employees/")
 def read_employees(db: Session = Depends(get_db)):
-    employees = db.query(Employee).all()
-    return [
-        {"employee_id": employee.employee_id, "name": employee.name}
-        for employee in employees
-    ]
+    try:
+        employees = db.query(Employee).all()
+        return [
+            {"employee_id": e.employee_id, "name": e.name}
+            for e in employees
+        ]
+    except SQLAlchemyError as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error occurred while reading employees: {error}"
+        )
+
+
+@app.post("/employees/")
+def create_employee(employee_data: EmployeeCreate, db: Session = Depends(get_db)):
+    if not employee_data.name.strip():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Employee name cannot be blank."
+        )
+
+    existing_employee = db.query(Employee).filter(Employee.name == employee_data.name).first()
+    if existing_employee:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Employee '{employee_data.name}' already exists."
+        )
+
+    try:
+        new_employee = Employee(name=employee_data.name)
+        db.add(new_employee)
+        db.commit()
+        db.refresh(new_employee)
+        return {
+            "employee_id": new_employee.employee_id,
+            "name": new_employee.name
+        }
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error occurred while creating a new employee."
+        )
+
+
+@app.put("/employees/{employee_id}/")
+def update_employee(
+    employee_id: int,
+    employee_data: EmployeeUpdate,
+    db: Session = Depends(get_db)
+):
+    if not employee_data.name.strip():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Employee name cannot be blank."
+        )
+
+    employee = db.query(Employee).filter(Employee.employee_id == employee_id).first()
+    if not employee:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Employee not found."
+        )
+
+    try:
+        employee.name = employee_data.name
+        db.commit()
+        db.refresh(employee)
+        return {
+            "employee_id": employee.employee_id,
+            "name": employee.name
+        }
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error occurred while updating the employee."
+        )
+
+
+@app.delete("/employees/{employee_id}/")
+def delete_employee(employee_id: int, db: Session = Depends(get_db)):
+    employee = db.query(Employee).filter(Employee.employee_id == employee_id).first()
+    if not employee:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Employee not found."
+        )
+
+    try:
+        db.delete(employee)
+        db.commit()
+        return {"message": "Employee deleted successfully."}
+    except SQLAlchemyError:
+        db.rollback()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Error occurred while deleting the employee."
+        )
 
 
 @app.post("/clock_in/")
