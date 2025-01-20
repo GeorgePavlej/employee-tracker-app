@@ -716,7 +716,7 @@ export default {
           });
     },
     loadShifts() {
-      const {employee_id, date_from, date_to} = this.shiftFilter;
+      const { employee_id, date_from, date_to } = this.shiftFilter;
       let url = `${baseURL}/shifts/?`;
       const params = [];
 
@@ -732,15 +732,26 @@ export default {
       url += params.join('&');
 
       fetch(url)
-          .then((res) => res.json())
-          .then((data) => {
-            this.shifts = data;
-          })
-          .catch((error) => {
-            console.error('Error:', error);
-            alert('An error occurred while fetching shifts.');
-          });
+        .then(async (res) => {
+          if (!res.ok) {
+            let err = 'Error fetching shifts.';
+            try {
+              const data = await res.json();
+              err = data.detail || err;
+            } catch {}
+            throw new Error(err);
+          }
+          return res.json();
+        })
+        .then((data) => {
+          this.shifts = Array.isArray(data) ? data : [];
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+          alert(error.message);
+        });
     },
+
 
     // ---- REPORTS ----
     generateAttendanceReport() {
@@ -803,15 +814,26 @@ export default {
     },
     loadLeaveRequests() {
       fetch(`${baseURL}/leave_requests/`)
-          .then((res) => res.json())
-          .then((data) => {
-            this.leaveRequests = data;
-          })
-          .catch((error) => {
-            console.error('Error:', error);
-            alert('An error occurred while fetching leave requests.');
-          });
+        .then(async (res) => {
+          if (!res.ok) {
+            let err = 'Error fetching leave requests.';
+            try {
+              const data = await res.json();
+              err = data.detail || err;
+            } catch {}
+            throw new Error(err);
+          }
+          return res.json();
+        })
+        .then((data) => {
+          this.leaveRequests = Array.isArray(data) ? data : [];
+        })
+        .catch((error) => {
+          console.error('Error:', error);
+          alert(error.message);
+        });
     },
+
     updateLeaveRequestStatus(leaveId, status) {
       fetch(`${baseURL}/leave_requests/${leaveId}/?status=${status}`, {
         method: 'PUT',
@@ -869,26 +891,31 @@ export default {
 
     deleteEmployee(employeeId) {
       if (!confirm('Are you sure you want to delete this employee?')) return;
+
       fetch(`${baseURL}/employees/${employeeId}/`, {
         method: 'DELETE',
       })
-          .then((res) => {
-            if (!res.ok) {
-              return res.json().then((data) => {
-                throw new Error(data.detail || 'Error deleting employee.');
-              });
-            }
-            return res.json();
-          })
-          .then(() => {
-            alert('Employee deleted successfully.');
-            this.loadEmployees();
-          })
-          .catch((error) => {
-            console.error(error);
-            alert(error.message);
-          });
+        .then(async (res) => {
+          if (!res.ok) {
+            let err = 'Error deleting employee.';
+            try {
+              const data = await res.json();
+              err = data.detail || err;
+            } catch {}
+            throw new Error(err);
+          }
+          return res.json();
+        })
+        .then((data) => {
+          alert(data.message || 'Employee deleted successfully.');
+          this.loadEmployees();
+        })
+        .catch((error) => {
+          console.error(error);
+          alert(error.message);
+        });
     },
+
 
     editEmployee(emp) {
       this.editMode = true;

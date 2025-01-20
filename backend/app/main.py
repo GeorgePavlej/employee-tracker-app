@@ -18,7 +18,7 @@ from fastapi.params import Query
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from starlette.middleware.cors import CORSMiddleware
-
+from starlette.responses import JSONResponse
 
 app = FastAPI()
 
@@ -125,20 +125,20 @@ def update_employee(
 def delete_employee(employee_id: int, db: Session = Depends(get_db)):
     employee = db.query(Employee).filter(Employee.employee_id == employee_id).first()
     if not employee:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Employee not found."
+        return JSONResponse(
+            status_code=status.HTTP_200_OK,
+            content={"message": "Employee not found or already deleted."},
         )
 
     try:
         db.delete(employee)
         db.commit()
         return {"message": "Employee deleted successfully."}
-    except SQLAlchemyError:
+    except SQLAlchemyError as error:
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error occurred while deleting the employee."
+            detail=str(error)
         )
 
 
@@ -220,114 +220,158 @@ def end_lunch(employee_id: int, db: Session = Depends(get_db)):
 
 
 @app.get("/logs/{employee_id}/{month_year}")
-def get_logs(employee_id: int, month_year: str, db: Session = Depends(get_db)):
+def get_employee_logs_for_month(
+    employee_id: int,
+    month_year: str,
+    db: Session = Depends(get_db)
+):
     try:
         month, year = map(int, month_year.split("-"))
     except ValueError:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid month-year format. Use MM-YYYY.")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid month-year format. Use MM-YYYY."
+        )
+
     start_date = date(year, month, 1)
     if month == 12:
         end_date = date(year + 1, 1, 1)
     else:
         end_date = date(year, month + 1, 1)
-    logs = db.query(TimeLog).filter(
-        TimeLog.employee_id == employee_id,
-        TimeLog.date >= start_date,
-        TimeLog.date < end_date
-    ).all()
-    result = []
-    for log in logs:
-        result.append({
-            "log_id": log.log_id,
-            "date": log.date.strftime("%Y-%m-%d"),
-            "clock_in_time": log.clock_in_time.strftime("%H:%M:%S") if log.clock_in_time else None,
-            "clock_out_time": log.clock_out_time.strftime("%H:%M:%S") if log.clock_out_time else None,
-            "lunch_start_time": log.lunch_start_time.strftime("%H:%M:%S") if log.lunch_start_time else None,
-            "lunch_end_time": log.lunch_end_time.strftime("%H:%M:%S") if log.lunch_end_time else None,
-        })
-    return result
+
+    try:
+        logs = db.query(TimeLog).filter(
+            TimeLog.employee_id == employee_id,
+            TimeLog.date >= start_date,
+            TimeLog.date < end_date
+        ).all()
+
+        result = []
+        for log in logs:
+            result.append({
+                "log_id": log.log_id,
+                "date": log.date.strftime("%Y-%m-%d"),
+                "clock_in_time": log.clock_in_time.strftime("%H:%M:%S") if log.clock_in_time else None,
+                "clock_out_time": log.clock_out_time.strftime("%H:%M:%S") if log.clock_out_time else None,
+                "lunch_start_time": log.lunch_start_time.strftime("%H:%M:%S") if log.lunch_start_time else None,
+                "lunch_end_time": log.lunch_end_time.strftime("%H:%M:%S") if log.lunch_end_time else None,
+            })
+        return result
+
+    except SQLAlchemyError as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving logs: {str(error)}"
+        )
 
 
 @app.get("/logs/")
 def get_logs(employee_name: str = None, date_from: str = None, date_to: str = None, db: Session = Depends(get_db)):
-    query = db.query(TimeLog).join(Employee)
+    try:
+        query = db.query(TimeLog).join(Employee)
 
-    if employee_name:
-        query = query.filter(Employee.name.ilike(f"%{employee_name}%"))
+        if employee_name:
+            query = query.filter(Employee.name.ilike(f"%{employee_name}%"))
 
-    if date_from:
-        try:
-            date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d").date()
-            query = query.filter(TimeLog.date >= date_from_parsed)
-        except ValueError:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid date_from format. Use YYYY-MM-DD.")
-    if date_to:
-        try:
-            date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d").date()
-            query = query.filter(TimeLog.date <= date_to_parsed)
-        except ValueError:
-            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid date_to format. Use YYYY-MM-DD.")
+        if date_from:
+            try:
+                date_from_parsed = datetime.strptime(date_from, "%Y-%m-%d").date()
+                query = query.filter(TimeLog.date >= date_from_parsed)
+            except ValueError:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid date_from format. Use YYYY-MM-DD."
+                )
+        if date_to:
+            try:
+                date_to_parsed = datetime.strptime(date_to, "%Y-%m-%d").date()
+                query = query.filter(TimeLog.date <= date_to_parsed)
+            except ValueError:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid date_to format. Use YYYY-MM-DD."
+                )
 
-    logs = query.order_by(TimeLog.date.desc()).all()
+        logs = query.order_by(TimeLog.date.desc()).all()  # [] if none
+        result = []
+        for log in logs:
+            result.append({
+                "log_id": log.log_id,
+                "employee_name": log.employee.name,
+                "date": log.date.strftime("%Y-%m-%d"),
+                "clock_in_time": log.clock_in_time.strftime("%H:%M:%S") if log.clock_in_time else None,
+                "clock_out_time": log.clock_out_time.strftime("%H:%M:%S") if log.clock_out_time else None,
+                "lunch_start_time": log.lunch_start_time.strftime("%H:%M:%S") if log.lunch_start_time else None,
+                "lunch_end_time": log.lunch_end_time.strftime("%H:%M:%S") if log.lunch_end_time else None,
+            })
+        return result
 
-    result = []
-    for log in logs:
-        result.append({
-            "log_id": log.log_id,
-            "employee_name": log.employee.name,
-            "date": log.date.strftime("%Y-%m-%d"),
-            "clock_in_time": log.clock_in_time.strftime("%H:%M:%S") if log.clock_in_time else None,
-            "clock_out_time": log.clock_out_time.strftime("%H:%M:%S") if log.clock_out_time else None,
-            "lunch_start_time": log.lunch_start_time.strftime("%H:%M:%S") if log.lunch_start_time else None,
-            "lunch_end_time": log.lunch_end_time.strftime("%H:%M:%S") if log.lunch_end_time else None,
-        })
-    return result
+    except SQLAlchemyError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving logs: {str(e)}"
+        )
 
 
 @app.post("/shifts/")
 def create_shift(shift: ShiftCreate, db: Session = Depends(get_db)):
-    on_leave = db.query(LeaveRequest).filter(
-        LeaveRequest.employee_id == shift.employee_id,
-        LeaveRequest.status == "Approved",
-        LeaveRequest.start_date <= shift.date,
-        LeaveRequest.end_date >= shift.date
-    ).first()
+    try:
+        on_leave = db.query(LeaveRequest).filter(
+            LeaveRequest.employee_id == shift.employee_id,
+            LeaveRequest.status == "Approved",
+            LeaveRequest.start_date <= shift.date,
+            LeaveRequest.end_date >= shift.date
+        ).first()
 
-    if on_leave:
+        if on_leave:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Cannot schedule shift: The employee is on approved leave for this date."
+            )
+
+        new_shift = Shift(**shift.dict())
+        db.add(new_shift)
+        db.commit()
+        db.refresh(new_shift)
+        return new_shift
+
+    except SQLAlchemyError as e:
+        db.rollback()
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot schedule shift: The employee is on approved leave for this date."
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error creating shift: {str(e)}"
         )
-
-    new_shift = Shift(**shift.dict())
-    db.add(new_shift)
-    db.commit()
-    db.refresh(new_shift)
-    return new_shift
 
 
 @app.get("/shifts/")
 def get_shifts(employee_id: int = None, date_from: date = None, date_to: date = None, db: Session = Depends(get_db)):
-    query = db.query(Shift, Employee.name).join(Employee)
-    if employee_id:
-        query = query.filter(Shift.employee_id == employee_id)
-    if date_from:
-        query = query.filter(Shift.date >= date_from)
-    if date_to:
-        query = query.filter(Shift.date <= date_to)
-    results = query.all()
+    try:
+        query = db.query(Shift, Employee.name).join(Employee)
+        if employee_id:
+            query = query.filter(Shift.employee_id == employee_id)
+        if date_from:
+            query = query.filter(Shift.date >= date_from)
+        if date_to:
+            query = query.filter(Shift.date <= date_to)
 
-    shifts = []
-    for shift, employee_name in results:
-        shifts.append({
-            "shift_id": shift.shift_id,
-            "employee_id": shift.employee_id,
-            "employee_name": employee_name,
-            "date": shift.date.strftime("%Y-%m-%d"),
-            "start_time": shift.start_time.strftime("%H:%M:%S"),
-            "end_time": shift.end_time.strftime("%H:%M:%S"),
-        })
-    return shifts
+        results = query.all()
+        shifts = []
+        for shift, employee_name in results:
+            shifts.append({
+                "shift_id": shift.shift_id,
+                "employee_id": shift.employee_id,
+                "employee_name": employee_name,
+                "date": shift.date.strftime("%Y-%m-%d"),
+                "start_time": shift.start_time.strftime("%H:%M:%S"),
+                "end_time": shift.end_time.strftime("%H:%M:%S"),
+            })
+        return shifts
+
+    except SQLAlchemyError as error:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error retrieving shifts: {str(error)}"
+        )
 
 
 @app.get("/reports/attendance/")
