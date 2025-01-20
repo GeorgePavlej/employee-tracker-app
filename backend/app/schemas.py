@@ -12,6 +12,10 @@ class EmployeeCreate(EmployeeBase):
     pass
 
 
+class EmployeeUpdate(EmployeeBase):
+    pass
+
+
 class EmployeeRead(EmployeeBase):
     employee_id: int
 
