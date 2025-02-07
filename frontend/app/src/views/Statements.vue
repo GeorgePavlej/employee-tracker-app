@@ -1,329 +1,244 @@
 <template>
-  <div>
-    <v-toolbar color="primary" dark>
+  <v-app>
+    <!-- Mobile Navigation Drawer -->
+    <v-navigation-drawer
+        v-model="drawer"
+        app
+        temporary
+    >
+      <v-list dense>
+        <v-list-item
+            v-for="item in menuItems"
+            :key="item.id"
+            @click="selectMenu(item.id)"
+        >
+          <v-list-item-content>
+            <v-list-item-title
+                :class="{'font-weight-bold underline': currentSection === item.id}"
+            >
+              {{ item.title }}
+            </v-list-item-title>
+          </v-list-item-content>
+        </v-list-item>
+      </v-list>
+    </v-navigation-drawer>
+
+    <!-- App Bar -->
+    <v-app-bar app color="primary" dark>
+      <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
       <v-toolbar-title>Employee Manager</v-toolbar-title>
       <v-spacer></v-spacer>
-
-      <!-- Menu Buttons -->
-      <v-btn
-          text
-          :class="{'font-weight-bold underline': currentSection === 'clockInOut'}"
-          @click="showSection('clockInOut')"
-      >
-        Clock In/Out
-      </v-btn>
-
-      <v-btn
-          text
-          :class="{'font-weight-bold underline': currentSection === 'logs'}"
-          @click="showSection('logs')"
-      >
-        Logs
-      </v-btn>
-
-      <v-btn
-          text
-          :class="{'font-weight-bold underline': currentSection === 'shifts'}"
-          @click="showSection('shifts')"
-      >
-        Shifts
-      </v-btn>
-
-      <v-btn
-          text
-          :class="{'font-weight-bold underline': currentSection === 'reports'}"
-          @click="showSection('reports')"
-      >
-        Reports
-      </v-btn>
-
-      <v-btn
-          text
-          :class="{'font-weight-bold underline': currentSection === 'leaveManagement'}"
-          @click="showSection('leaveManagement')"
-      >
-        Leave Management
-      </v-btn>
-
-      <v-btn
-          text
-          :class="{'font-weight-bold underline': currentSection === 'employeeManagement'}"
-          @click="showSection('employeeManagement')"
-      >
-        Employee Management
-      </v-btn>
-    </v-toolbar>
+      <div class="d-none d-md-flex">
+        <v-btn
+            text
+            :class="{'font-weight-bold underline': currentSection === 'clockInOut'}"
+            @click="showSection('clockInOut')"
+        >
+          Clock In/Out
+        </v-btn>
+        <v-btn
+            text
+            :class="{'font-weight-bold underline': currentSection === 'logs'}"
+            @click="showSection('logs')"
+        >
+          Logs
+        </v-btn>
+        <v-btn
+            text
+            :class="{'font-weight-bold underline': currentSection === 'shifts'}"
+            @click="showSection('shifts')"
+        >
+          Shifts
+        </v-btn>
+        <v-btn
+            text
+            :class="{'font-weight-bold underline': currentSection === 'reports'}"
+            @click="showSection('reports')"
+        >
+          Reports
+        </v-btn>
+        <v-btn
+            text
+            :class="{'font-weight-bold underline': currentSection === 'leaveManagement'}"
+            @click="showSection('leaveManagement')"
+        >
+          Leave Management
+        </v-btn>
+        <v-btn
+            text
+            :class="{'font-weight-bold underline': currentSection === 'employeeManagement'}"
+            @click="showSection('employeeManagement')"
+        >
+          Employee Management
+        </v-btn>
+      </div>
+    </v-app-bar>
 
     <!-- Main Content -->
-    <v-container fluid class="mt-4">
-      <!-- CLOCK IN/OUT SECTION -->
-      <div v-if="currentSection === 'clockInOut'">
-        <h2>Clock In/Out</h2>
-        <v-select
-            v-model="selectedEmployeeClock"
-            :items="employees"
-            item-title="name"
-            item-value="employee_id"
-            label="Select Employee"
-            outlined
-        ></v-select>
-
-        <div class="mt-4">
-          <v-btn
-              color="primary"
-              class="mr-2"
-              @click="clockIn"
-              :disabled="!selectedEmployeeClock"
-          >
-            Clock In
-          </v-btn>
-          <v-btn
-              color="secondary"
-              class="mr-2"
-              @click="clockOut"
-              :disabled="!selectedEmployeeClock"
-          >
-            Clock Out
-          </v-btn>
-          <v-btn
-              color="warning"
-              class="mr-2"
-              @click="startLunch"
-              :disabled="!selectedEmployeeClock"
-          >
-            Start Lunch
-          </v-btn>
-          <v-btn
-              color="success"
-              @click="endLunch"
-              :disabled="!selectedEmployeeClock"
-          >
-            End Lunch
-          </v-btn>
-        </div>
-      </div>
-
-      <!-- LOGS SECTION -->
-      <div v-if="currentSection === 'logs'">
-        <h2>View Logs</h2>
-        <v-row dense>
-          <v-col cols="12" md="3">
-            <v-text-field
-                v-model="logsFilter.name"
-                label="Employee Name (contains)"
-                outlined
-            ></v-text-field>
-          </v-col>
-          <v-col cols="12" md="3">
-            <v-text-field
-                v-model="logsFilter.dateFrom"
-                type="date"
-                label="Date From"
-                outlined
-            ></v-text-field>
-          </v-col>
-          <v-col cols="12" md="3">
-            <v-text-field
-                v-model="logsFilter.dateTo"
-                type="date"
-                label="Date To"
-                outlined
-            ></v-text-field>
-          </v-col>
-          <v-col cols="12" md="3" class="text-right">
-            <v-btn color="primary" @click="viewLogs">Filter Logs</v-btn>
-          </v-col>
-        </v-row>
-
-        <v-data-table :items="logs" class="mt-4" dense>
-          <template v-slot:headers>
-            <tr>
-              <th class="text-left">Employee Name</th>
-              <th class="text-left">Date</th>
-              <th class="text-left">Clock In</th>
-              <th class="text-left">Clock Out</th>
-              <th class="text-left">Lunch Start</th>
-              <th class="text-left">Lunch End</th>
-            </tr>
-          </template>
-          <template v-slot:body="{ items }">
-            <tr v-if="items.length === 0">
-              <td colspan="6" class="text-center">No logs found for the given filters.</td>
-            </tr>
-            <tr v-for="(log, index) in items" :key="index">
-              <td>{{ log.employee_name }}</td>
-              <td>{{ log.date }}</td>
-              <td>{{ log.clock_in_time || 'N/A' }}</td>
-              <td>{{ log.clock_out_time || 'N/A' }}</td>
-              <td>{{ log.lunch_start_time || 'N/A' }}</td>
-              <td>{{ log.lunch_end_time || 'N/A' }}</td>
-            </tr>
-          </template>
-        </v-data-table>
-      </div>
-
-      <!-- SHIFTS SECTION -->
-      <div v-if="currentSection === 'shifts'">
-        <h2>Shift Scheduling</h2>
-        <v-form ref="shiftForm">
-          <v-row dense>
-            <v-col cols="12" md="3">
-              <v-select
-                  v-model="shiftFormData.employee_id"
-                  :items="employees"
-                  item-value="employee_id"
-                  item-title="name"
-                  label="Employee"
-                  outlined
-              ></v-select>
-            </v-col>
-            <v-col cols="12" md="3">
-              <v-text-field
-                  v-model="shiftFormData.date"
-                  type="date"
-                  label="Date"
-                  outlined
-              ></v-text-field>
-            </v-col>
-            <v-col cols="12" md="3">
-              <v-text-field
-                  v-model="shiftFormData.start_time"
-                  type="time"
-                  label="Start Time"
-                  outlined
-              ></v-text-field>
-            </v-col>
-            <v-col cols="12" md="3">
-              <v-text-field
-                  v-model="shiftFormData.end_time"
-                  type="time"
-                  label="End Time"
-                  outlined
-              ></v-text-field>
-            </v-col>
-            <v-col cols="12" class="text-right">
-              <v-btn color="primary" @click="createShift">Create Shift</v-btn>
-            </v-col>
-          </v-row>
-        </v-form>
-
-        <hr class="my-4"/>
-
-        <h3>View Scheduled Shifts</h3>
-        <v-row dense>
-          <v-col cols="12" md="3">
-            <v-select
-                v-model="shiftFilter.employee_id"
-                :items="employees"
-                item-value="employee_id"
-                item-title="name"
-                label="Employee"
-                outlined
-            ></v-select>
-          </v-col>
-          <v-col cols="12" md="3">
-            <v-text-field
-                v-model="shiftFilter.date_from"
-                type="date"
-                label="Date From"
-                outlined
-            ></v-text-field>
-          </v-col>
-          <v-col cols="12" md="3">
-            <v-text-field
-                v-model="shiftFilter.date_to"
-                type="date"
-                label="Date To"
-                outlined
-            ></v-text-field>
-          </v-col>
-          <v-col cols="12" md="3" class="text-right">
-            <v-btn color="primary" @click="loadShifts">Filter Shifts</v-btn>
-          </v-col>
-        </v-row>
-
-        <v-data-table :items="shifts" class="mt-3" dense>
-          <template v-slot:headers>
-            <tr>
-              <th>Employee Name</th>
-              <th>Date</th>
-              <th>Start</th>
-              <th>End</th>
-            </tr>
-          </template>
-          <template v-slot:body="{ items }">
-            <tr v-if="items.length === 0">
-              <td colspan="4" class="text-center">No shifts found for the given filters.</td>
-            </tr>
-            <tr v-for="(shift, index) in items" :key="index">
-              <td>{{ shift.employee_name }}</td>
-              <td>{{ shift.date }}</td>
-              <td>{{ shift.start_time }}</td>
-              <td>{{ shift.end_time }}</td>
-            </tr>
-          </template>
-        </v-data-table>
-      </div>
-
-      <!-- REPORTS SECTION -->
-      <div v-if="currentSection === 'reports'">
-        <h2>Attendance Reports</h2>
-        <v-row dense>
-          <v-col cols="12" md="3">
-            <v-select
-              v-model="reportFilter.employee_id"
+    <v-main>
+      <v-container fluid class="mt-4">
+        <!-- CLOCK IN/OUT SECTION -->
+        <div v-if="currentSection === 'clockInOut'">
+          <h2>Clock In/Out</h2>
+          <v-select
+              v-model="selectedEmployeeClock"
               :items="employees"
-              item-value="employee_id"
               item-title="name"
-              label="Employee"
+              item-value="employee_id"
+              label="Select Employee"
               outlined
-            ></v-select>
-          </v-col>
-          <v-col cols="12" md="3">
-            <v-text-field
-              v-model="reportFilter.date_from"
-              type="date"
-              label="Date From"
-              outlined
-            ></v-text-field>
-          </v-col>
-          <v-col cols="12" md="3">
-            <v-text-field
-              v-model="reportFilter.date_to"
-              type="date"
-              label="Date To"
-              outlined
-            ></v-text-field>
-          </v-col>
-          <v-col cols="12" md="3" class="text-right">
-            <v-btn color="primary" @click="generateAttendanceReport"
-            >Generate Report
-            </v-btn
-            >
-          </v-col>
-        </v-row>
+          ></v-select>
 
-        <div class="mt-4">
-          <div v-if="reportResult">
-            <h3>Attendance Report for Employee ID: {{ reportResult.employee_id }}</h3>
-            <p>Date Range: {{ reportResult.date_range }}</p>
-            <p>
-              <strong>Total Hours Worked:</strong>
-              {{ formatHours(reportResult.total_hours_worked) }}
-            </p>
+          <div class="mt-4">
+            <v-btn
+                color="primary"
+                class="mr-2"
+                @click="clockIn"
+                :disabled="!selectedEmployeeClock"
+            >
+              Clock In
+            </v-btn>
+            <v-btn
+                color="secondary"
+                class="mr-2"
+                @click="clockOut"
+                :disabled="!selectedEmployeeClock"
+            >
+              Clock Out
+            </v-btn>
+            <v-btn
+                color="warning"
+                class="mr-2"
+                @click="startLunch"
+                :disabled="!selectedEmployeeClock"
+            >
+              Start Lunch
+            </v-btn>
+            <v-btn
+                color="success"
+                @click="endLunch"
+                :disabled="!selectedEmployeeClock"
+            >
+              End Lunch
+            </v-btn>
           </div>
         </div>
-      </div>
 
-      <!-- LEAVE MANAGEMENT SECTION -->
-      <div v-if="currentSection === 'leaveManagement'">
-        <h2>Leave Management</h2>
-        <h4>Submit a Leave Request</h4>
-        <v-form ref="leaveForm">
+        <!-- LOGS SECTION -->
+        <div v-if="currentSection === 'logs'">
+          <h2>View Logs</h2>
+          <v-row dense>
+            <v-col cols="12" md="3">
+              <v-text-field
+                  v-model="logsFilter.name"
+                  label="Employee Name (contains)"
+                  outlined
+              ></v-text-field>
+            </v-col>
+            <v-col cols="12" md="3">
+              <v-text-field
+                  v-model="logsFilter.dateFrom"
+                  type="date"
+                  label="Date From"
+                  outlined
+              ></v-text-field>
+            </v-col>
+            <v-col cols="12" md="3">
+              <v-text-field
+                  v-model="logsFilter.dateTo"
+                  type="date"
+                  label="Date To"
+                  outlined
+              ></v-text-field>
+            </v-col>
+            <v-col cols="12" md="3" class="text-right">
+              <v-btn color="primary" @click="viewLogs">Filter Logs</v-btn>
+            </v-col>
+          </v-row>
+
+          <v-data-table :items="logs" class="mt-4" dense>
+            <template v-slot:headers>
+              <tr>
+                <th class="text-left">Employee Name</th>
+                <th class="text-left">Date</th>
+                <th class="text-left">Clock In</th>
+                <th class="text-left">Clock Out</th>
+                <th class="text-left">Lunch Start</th>
+                <th class="text-left">Lunch End</th>
+              </tr>
+            </template>
+            <template v-slot:body="{ items }">
+              <tr v-if="items.length === 0">
+                <td colspan="6" class="text-center">
+                  No logs found for the given filters.
+                </td>
+              </tr>
+              <tr v-for="(log, index) in items" :key="index">
+                <td>{{ log.employee_name }}</td>
+                <td>{{ log.date }}</td>
+                <td>{{ log.clock_in_time || 'N/A' }}</td>
+                <td>{{ log.clock_out_time || 'N/A' }}</td>
+                <td>{{ log.lunch_start_time || 'N/A' }}</td>
+                <td>{{ log.lunch_end_time || 'N/A' }}</td>
+              </tr>
+            </template>
+          </v-data-table>
+        </div>
+
+        <!-- SHIFTS SECTION -->
+        <div v-if="currentSection === 'shifts'">
+          <h2>Shift Scheduling</h2>
+          <v-form ref="shiftForm">
+            <v-row dense>
+              <v-col cols="12" md="3">
+                <v-select
+                    v-model="shiftFormData.employee_id"
+                    :items="employees"
+                    item-value="employee_id"
+                    item-title="name"
+                    label="Employee"
+                    outlined
+                ></v-select>
+              </v-col>
+              <v-col cols="12" md="3">
+                <v-text-field
+                    v-model="shiftFormData.date"
+                    type="date"
+                    label="Date"
+                    outlined
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12" md="3">
+                <v-text-field
+                    v-model="shiftFormData.start_time"
+                    type="time"
+                    label="Start Time"
+                    outlined
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12" md="3">
+                <v-text-field
+                    v-model="shiftFormData.end_time"
+                    type="time"
+                    label="End Time"
+                    outlined
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12" class="text-right">
+                <v-btn color="primary" @click="createShift">
+                  Create Shift
+                </v-btn>
+              </v-col>
+            </v-row>
+          </v-form>
+
+          <hr class="my-4"/>
+
+          <h3>View Scheduled Shifts</h3>
           <v-row dense>
             <v-col cols="12" md="3">
               <v-select
-                  v-model="leaveRequest.employee_id"
+                  v-model="shiftFilter.employee_id"
                   :items="employees"
                   item-value="employee_id"
                   item-title="name"
@@ -333,211 +248,329 @@
             </v-col>
             <v-col cols="12" md="3">
               <v-text-field
-                  v-model="leaveRequest.start_date"
+                  v-model="shiftFilter.date_from"
                   type="date"
-                  label="Start Date"
+                  label="Date From"
                   outlined
               ></v-text-field>
             </v-col>
             <v-col cols="12" md="3">
               <v-text-field
-                  v-model="leaveRequest.end_date"
+                  v-model="shiftFilter.date_to"
                   type="date"
-                  label="End Date"
+                  label="Date To"
                   outlined
               ></v-text-field>
             </v-col>
-            <v-col cols="12">
-              <v-text-field
-                  v-model="leaveRequest.reason"
-                  label="Reason (optional)"
-                  outlined
-                  textarea
-                  rows="2"
-              ></v-text-field>
-            </v-col>
-            <v-col cols="12" class="text-right">
-              <v-btn color="primary" @click="submitLeaveRequest"
-              >Submit Leave Request
-              </v-btn
-              >
+            <v-col cols="12" md="3" class="text-right">
+              <v-btn color="primary" @click="loadShifts">
+                Filter Shifts
+              </v-btn>
             </v-col>
           </v-row>
-        </v-form>
 
-        <hr class="my-4"/>
+          <v-data-table :items="shifts" class="mt-3" dense>
+            <template v-slot:headers>
+              <tr>
+                <th>Employee Name</th>
+                <th>Date</th>
+                <th>Start</th>
+                <th>End</th>
+              </tr>
+            </template>
+            <template v-slot:body="{ items }">
+              <tr v-if="items.length === 0">
+                <td colspan="4" class="text-center">
+                  No shifts found for the given filters.
+                </td>
+              </tr>
+              <tr v-for="(shift, index) in items" :key="index">
+                <td>{{ shift.employee_name }}</td>
+                <td>{{ shift.date }}</td>
+                <td>{{ shift.start_time }}</td>
+                <td>{{ shift.end_time }}</td>
+              </tr>
+            </template>
+          </v-data-table>
+        </div>
 
-        <h3>Leave Requests</h3>
-        <v-data-table :items="leaveRequests" dense>
-          <template v-slot:headers>
-            <tr>
-              <th>Employee Name</th>
-              <th>Start Date</th>
-              <th>End Date</th>
-              <th>Reason</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </template>
-          <template v-slot:body="{ items }">
-            <tr v-if="items.length === 0">
-              <td colspan="6" class="text-center">No leave requests found.</td>
-            </tr>
-            <tr v-for="(request, index) in items" :key="index">
-              <td>{{ request.employee_name }}</td>
-              <td>{{ request.start_date }}</td>
-              <td>{{ request.end_date }}</td>
-              <td>{{ request.reason || '' }}</td>
-              <td>{{ request.status }}</td>
-              <td>
-                <div v-if="request.status === 'Pending'">
-                  <v-btn
-                      color="success"
-                      small
-                      @click="updateLeaveRequestStatus(request.leave_id, 'Approved')"
-                  >
-                    Approve
-                  </v-btn>
-                  <v-btn
-                      color="error"
-                      small
-                      @click="updateLeaveRequestStatus(request.leave_id, 'Rejected')"
-                  >
-                    Reject
-                  </v-btn>
-                </div>
-              </td>
-            </tr>
-          </template>
-        </v-data-table>
-      </div>
-
-      <!-- ========================================== -->
-      <!--         EMPLOYEE MANAGEMENT SECTION       -->
-      <!-- ========================================== -->
-      <div v-if="currentSection === 'employeeManagement'">
-        <h2>Employee Management</h2>
-
-        <v-form ref="employeeForm">
+        <!-- REPORTS SECTION -->
+        <div v-if="currentSection === 'reports'">
+          <h2>Attendance Reports</h2>
           <v-row dense>
-            <v-col cols="12" md="4">
+            <v-col cols="12" md="3">
+              <v-select
+                  v-model="reportFilter.employee_id"
+                  :items="employees"
+                  item-value="employee_id"
+                  item-title="name"
+                  label="Employee"
+                  outlined
+              ></v-select>
+            </v-col>
+            <v-col cols="12" md="3">
               <v-text-field
-                  v-model="employeeFormData.name"
-                  label="Employee Name"
+                  v-model="reportFilter.date_from"
+                  type="date"
+                  label="Date From"
                   outlined
               ></v-text-field>
             </v-col>
-            <v-col cols="12" md="4" class="text-right">
-              <v-btn
-                  color="primary"
-                  v-if="!editMode"
-                  @click="createEmployee"
-              >
-                Create Employee
-              </v-btn>
-
-              <v-btn
-                  color="success"
-                  v-if="editMode"
-                  @click="updateEmployee"
-              >
-                Update Employee
-              </v-btn>
-
-              <v-btn
-                  color="secondary"
-                  v-if="editMode"
-                  @click="cancelEdit"
-              >
-                Cancel
+            <v-col cols="12" md="3">
+              <v-text-field
+                  v-model="reportFilter.date_to"
+                  type="date"
+                  label="Date To"
+                  outlined
+              ></v-text-field>
+            </v-col>
+            <v-col cols="12" md="3" class="text-right">
+              <v-btn color="primary" @click="generateAttendanceReport">
+                Generate Report
               </v-btn>
             </v-col>
           </v-row>
-        </v-form>
 
-        <hr class="my-4"/>
+          <div class="mt-4">
+            <div v-if="reportResult">
+              <h3>
+                Attendance Report for Employee ID:
+                {{ reportResult.employee_id }}
+              </h3>
+              <p>Date Range: {{ reportResult.date_range }}</p>
+              <p>
+                <strong>Total Hours Worked:</strong>
+                {{ formatHours(reportResult.total_hours_worked) }}
+              </p>
+            </div>
+          </div>
+        </div>
 
-        <v-data-table :items="employees" dense>
-          <template v-slot:headers>
-            <tr>
-              <th>Employee ID</th>
-              <th>Name</th>
-              <th class="text-right">Actions</th>
-            </tr>
-          </template>
-          <template v-slot:body="{ items }">
-            <tr v-if="items.length === 0">
-              <td colspan="3" class="text-center">
-                No employees found.
-              </td>
-            </tr>
-            <tr v-for="(emp, index) in items" :key="index">
-              <td>{{ emp.employee_id }}</td>
-              <td>{{ emp.name }}</td>
-              <td class="text-right">
-                <v-btn
-                    small
-                    color="warning"
-                    @click="editEmployee(emp)"
-                >
-                  Edit
+        <!-- LEAVE MANAGEMENT SECTION -->
+        <div v-if="currentSection === 'leaveManagement'">
+          <h2>Leave Management</h2>
+          <h4>Submit a Leave Request</h4>
+          <v-form ref="leaveForm">
+            <v-row dense>
+              <v-col cols="12" md="3">
+                <v-select
+                    v-model="leaveRequest.employee_id"
+                    :items="employees"
+                    item-value="employee_id"
+                    item-title="name"
+                    label="Employee"
+                    outlined
+                ></v-select>
+              </v-col>
+              <v-col cols="12" md="3">
+                <v-text-field
+                    v-model="leaveRequest.start_date"
+                    type="date"
+                    label="Start Date"
+                    outlined
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12" md="3">
+                <v-text-field
+                    v-model="leaveRequest.end_date"
+                    type="date"
+                    label="End Date"
+                    outlined
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12">
+                <v-text-field
+                    v-model="leaveRequest.reason"
+                    label="Reason (optional)"
+                    outlined
+                    textarea
+                    rows="2"
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12" class="text-right">
+                <v-btn color="primary" @click="submitLeaveRequest">
+                  Submit Leave Request
                 </v-btn>
+              </v-col>
+            </v-row>
+          </v-form>
+
+          <hr class="my-4"/>
+
+          <h3>Leave Requests</h3>
+          <v-data-table :items="leaveRequests" dense>
+            <template v-slot:headers>
+              <tr>
+                <th>Employee Name</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </template>
+            <template v-slot:body="{ items }">
+              <tr v-if="items.length === 0">
+                <td colspan="6" class="text-center">
+                  No leave requests found.
+                </td>
+              </tr>
+              <tr v-for="(request, index) in items" :key="index">
+                <td>{{ request.employee_name }}</td>
+                <td>{{ request.start_date }}</td>
+                <td>{{ request.end_date }}</td>
+                <td>{{ request.reason || '' }}</td>
+                <td>{{ request.status }}</td>
+                <td>
+                  <div v-if="request.status === 'Pending'">
+                    <v-btn
+                        color="success"
+                        small
+                        @click="updateLeaveRequestStatus(request.leave_id, 'Approved')"
+                    >
+                      Approve
+                    </v-btn>
+                    <v-btn
+                        color="error"
+                        small
+                        @click="updateLeaveRequestStatus(request.leave_id, 'Rejected')"
+                    >
+                      Reject
+                    </v-btn>
+                  </div>
+                </td>
+              </tr>
+            </template>
+          </v-data-table>
+        </div>
+
+        <!-- EMPLOYEE MANAGEMENT SECTION -->
+        <div v-if="currentSection === 'employeeManagement'">
+          <h2>Employee Management</h2>
+
+          <v-form ref="employeeForm">
+            <v-row dense>
+              <v-col cols="12" md="4">
+                <v-text-field
+                    v-model="employeeFormData.name"
+                    label="Employee Name"
+                    outlined
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12" md="4" class="text-right">
                 <v-btn
-                    small
-                    color="error"
-                    @click="deleteEmployee(emp.employee_id)"
+                    color="primary"
+                    v-if="!editMode"
+                    @click="createEmployee"
                 >
-                  Delete
+                  Create Employee
                 </v-btn>
-              </td>
-            </tr>
-          </template>
-        </v-data-table>
-      </div>
-    </v-container>
-  </div>
+
+                <v-btn
+                    color="success"
+                    v-if="editMode"
+                    @click="updateEmployee"
+                >
+                  Update Employee
+                </v-btn>
+
+                <v-btn
+                    color="secondary"
+                    v-if="editMode"
+                    @click="cancelEdit"
+                >
+                  Cancel
+                </v-btn>
+              </v-col>
+            </v-row>
+          </v-form>
+
+          <hr class="my-4"/>
+
+          <v-data-table :items="employees" dense>
+            <template v-slot:headers>
+              <tr>
+                <th>Employee ID</th>
+                <th>Name</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </template>
+            <template v-slot:body="{ items }">
+              <tr v-if="items.length === 0">
+                <td colspan="3" class="text-center">
+                  No employees found.
+                </td>
+              </tr>
+              <tr v-for="(emp, index) in items" :key="index">
+                <td>{{ emp.employee_id }}</td>
+                <td>{{ emp.name }}</td>
+                <td class="text-right">
+                  <v-btn
+                      small
+                      color="warning"
+                      @click="editEmployee(emp)"
+                  >
+                    Edit
+                  </v-btn>
+                  <v-btn
+                      small
+                      color="error"
+                      @click="deleteEmployee(emp.employee_id)"
+                  >
+                    Delete
+                  </v-btn>
+                </td>
+              </tr>
+            </template>
+          </v-data-table>
+        </div>
+      </v-container>
+    </v-main>
+  </v-app>
 </template>
 
 <script>
-
 const baseURL = process.env.VUE_APP_API_URL;
 export default {
   name: 'Statements',
   data() {
     return {
+      drawer: false,
       currentSection: 'clockInOut',
-
+      menuItems: [
+        {id: 'clockInOut', title: 'Clock In/Out'},
+        {id: 'logs', title: 'Logs'},
+        {id: 'shifts', title: 'Shifts'},
+        {id: 'reports', title: 'Reports'},
+        {id: 'leaveManagement', title: 'Leave Management'},
+        {id: 'employeeManagement', title: 'Employee Management'},
+      ],
       employees: [],
       selectedEmployeeClock: null,
-
       logsFilter: {
         name: '',
         dateFrom: '',
         dateTo: ''
       },
       logs: [],
-
       shiftFormData: {
         employee_id: null,
         date: '',
         start_time: '',
         end_time: ''
       },
-
       shiftFilter: {
         employee_id: null,
         date_from: '',
         date_to: ''
       },
       shifts: [],
-
       reportFilter: {
         employee_id: null,
         date_from: '',
         date_to: ''
       },
       reportResult: null,
-
       leaveRequest: {
         employee_id: null,
         start_date: '',
@@ -545,7 +578,6 @@ export default {
         reason: '',
       },
       leaveRequests: [],
-
       employeeFormData: {
         employee_id: null,
         name: '',
@@ -575,7 +607,10 @@ export default {
         this.cancelEdit();
       }
     },
-
+    selectMenu(sectionId) {
+      this.showSection(sectionId);
+      this.drawer = false;
+    },
     formatHours(hours) {
       if (!hours) return '0.00';
       return Number(hours).toFixed(2);
@@ -601,7 +636,7 @@ export default {
           .then((res) => res.json())
           .then((data) => {
             alert(data.message || data.detail);
-          })
+          });
     },
     clockOut() {
       if (!this.selectedEmployeeClock) return;
@@ -716,7 +751,7 @@ export default {
           });
     },
     loadShifts() {
-      const { employee_id, date_from, date_to } = this.shiftFilter;
+      const {employee_id, date_from, date_to} = this.shiftFilter;
       let url = `${baseURL}/shifts/?`;
       const params = [];
 
@@ -732,26 +767,26 @@ export default {
       url += params.join('&');
 
       fetch(url)
-        .then(async (res) => {
-          if (!res.ok) {
-            let err = 'Error fetching shifts.';
-            try {
-              const data = await res.json();
-              err = data.detail || err;
-            } catch {}
-            throw new Error(err);
-          }
-          return res.json();
-        })
-        .then((data) => {
-          this.shifts = Array.isArray(data) ? data : [];
-        })
-        .catch((error) => {
-          console.error('Error:', error);
-          alert(error.message);
-        });
+          .then(async (res) => {
+            if (!res.ok) {
+              let err = 'Error fetching shifts.';
+              try {
+                const data = await res.json();
+                err = data.detail || err;
+              } catch {
+              }
+              throw new Error(err);
+            }
+            return res.json();
+          })
+          .then((data) => {
+            this.shifts = Array.isArray(data) ? data : [];
+          })
+          .catch((error) => {
+            console.error('Error:', error);
+            alert(error.message);
+          });
     },
-
 
     // ---- REPORTS ----
     generateAttendanceReport() {
@@ -814,26 +849,26 @@ export default {
     },
     loadLeaveRequests() {
       fetch(`${baseURL}/leave_requests/`)
-        .then(async (res) => {
-          if (!res.ok) {
-            let err = 'Error fetching leave requests.';
-            try {
-              const data = await res.json();
-              err = data.detail || err;
-            } catch {}
-            throw new Error(err);
-          }
-          return res.json();
-        })
-        .then((data) => {
-          this.leaveRequests = Array.isArray(data) ? data : [];
-        })
-        .catch((error) => {
-          console.error('Error:', error);
-          alert(error.message);
-        });
+          .then(async (res) => {
+            if (!res.ok) {
+              let err = 'Error fetching leave requests.';
+              try {
+                const data = await res.json();
+                err = data.detail || err;
+              } catch {
+              }
+              throw new Error(err);
+            }
+            return res.json();
+          })
+          .then((data) => {
+            this.leaveRequests = Array.isArray(data) ? data : [];
+          })
+          .catch((error) => {
+            console.error('Error:', error);
+            alert(error.message);
+          });
     },
-
     updateLeaveRequestStatus(leaveId, status) {
       fetch(`${baseURL}/leave_requests/${leaveId}/?status=${status}`, {
         method: 'PUT',
@@ -856,10 +891,7 @@ export default {
           });
     },
 
-    // ======================================
-    //          EMPLOYEE MANAGEMENT
-    // ======================================
-
+    // ---- EMPLOYEE MANAGEMENT ----
     createEmployee() {
       if (!this.employeeFormData.name) {
         alert('Please enter a name.');
@@ -888,32 +920,32 @@ export default {
             alert(error.message);
           });
     },
-
     deleteEmployee(employeeId) {
       if (!confirm('Are you sure you want to delete this employee?')) return;
 
       fetch(`${baseURL}/employees/${employeeId}/`, {
         method: 'DELETE',
       })
-        .then(async (res) => {
-          if (!res.ok) {
-            let err = 'Error deleting employee.';
-            try {
-              const data = await res.json();
-              err = data.detail || err;
-            } catch {}
-            throw new Error(err);
-          }
-          return res.json();
-        })
-        .then((data) => {
-          alert(data.message || 'Employee deleted successfully.');
-          this.loadEmployees();
-        })
-        .catch((error) => {
-          console.error(error);
-          alert(error.message);
-        });
+          .then(async (res) => {
+            if (!res.ok) {
+              let err = 'Error deleting employee.';
+              try {
+                const data = await res.json();
+                err = data.detail || err;
+              } catch {
+              }
+              throw new Error(err);
+            }
+            return res.json();
+          })
+          .then((data) => {
+            alert(data.message || 'Employee deleted successfully.');
+            this.loadEmployees();
+          })
+          .catch((error) => {
+            console.error(error);
+            alert(error.message);
+          });
     },
 
 
@@ -922,8 +954,6 @@ export default {
       this.employeeFormData.employee_id = emp.employee_id;
       this.employeeFormData.name = emp.name;
     },
-
-    // UPDATE
     updateEmployee() {
       const {employee_id, name} = this.employeeFormData;
       if (!employee_id || !name) {
@@ -953,7 +983,6 @@ export default {
             alert(error.message);
           });
     },
-
     cancelEdit() {
       this.editMode = false;
       this.employeeFormData.employee_id = null;
