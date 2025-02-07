@@ -5,6 +5,8 @@
         v-model="drawer"
         app
         temporary
+        color="primary"
+        dark
     >
       <v-list dense>
         <v-list-item
@@ -13,11 +15,12 @@
             @click="selectMenu(item.id)"
         >
           <v-list-item-content>
-            <v-list-item-title
-                :class="{'font-weight-bold underline': currentSection === item.id}"
-            >
-              {{ item.title }}
-            </v-list-item-title>
+            <div class="d-flex align-center">
+              <span :class="{'font-weight-bold underline': currentSection === item.id}">
+                {{ item.title }}
+              </span>
+              <v-icon class="ml-2">{{ item.icon }}</v-icon>
+            </div>
           </v-list-item-content>
         </v-list-item>
       </v-list>
@@ -538,12 +541,12 @@ export default {
       drawer: false,
       currentSection: 'clockInOut',
       menuItems: [
-        {id: 'clockInOut', title: 'Clock In/Out'},
-        {id: 'logs', title: 'Logs'},
-        {id: 'shifts', title: 'Shifts'},
-        {id: 'reports', title: 'Reports'},
-        {id: 'leaveManagement', title: 'Leave Management'},
-        {id: 'employeeManagement', title: 'Employee Management'},
+        {id: 'clockInOut', title: 'Clock In/Out', icon: 'mdi-clock-outline'},
+        {id: 'logs', title: 'Logs', icon: 'mdi-file-document-outline'},
+        {id: 'shifts', title: 'Shifts', icon: 'mdi-calendar-clock'},
+        {id: 'reports', title: 'Reports', icon: 'mdi-chart-bar'},
+        {id: 'leaveManagement', title: 'Leave Management', icon: 'mdi-beach'},
+        {id: 'employeeManagement', title: 'Employee Management', icon: 'mdi-account-group'},
       ],
       employees: [],
       selectedEmployeeClock: null,
@@ -947,7 +950,6 @@ export default {
             alert(error.message);
           });
     },
-
 
     editEmployee(emp) {
       this.editMode = true;
