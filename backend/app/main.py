@@ -50,7 +50,7 @@ def read_employees(db: Session = Depends(get_db)):
     except SQLAlchemyError as error:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error occurred while reading employees: {error}"
+            detail=f"Pri načítaní zamestnancov došlo k chybe: {error}"
         )
 
 
@@ -59,14 +59,14 @@ def create_employee(employee_data: EmployeeCreate, db: Session = Depends(get_db)
     if not employee_data.name.strip():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Employee name cannot be blank."
+            detail="Meno zamestnanca nemôže byť prázdne."
         )
 
     existing_employee = db.query(Employee).filter(Employee.name == employee_data.name).first()
     if existing_employee:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Employee '{employee_data.name}' already exists."
+            detail=f"Zamestnanec '{employee_data.name}' už existuje."
         )
 
     try:
@@ -82,7 +82,7 @@ def create_employee(employee_data: EmployeeCreate, db: Session = Depends(get_db)
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error occurred while creating a new employee."
+            detail="Pri vytváraní nového zamestnanca došlo k chybe."
         )
 
 
@@ -95,14 +95,14 @@ def update_employee(
     if not employee_data.name.strip():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Employee name cannot be blank."
+            detail="Meno zamestnanca nemôže byť prázdne."
         )
 
     employee = db.query(Employee).filter(Employee.employee_id == employee_id).first()
     if not employee:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Employee not found."
+            detail="Zamestnanec nebol nájdený."
         )
 
     try:
@@ -117,7 +117,7 @@ def update_employee(
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Error occurred while updating the employee."
+            detail="Pri aktualizácii zamestnanca došlo k chybe."
         )
 
 
@@ -127,13 +127,13 @@ def delete_employee(employee_id: int, db: Session = Depends(get_db)):
     if not employee:
         return JSONResponse(
             status_code=status.HTTP_200_OK,
-            content={"message": "Employee not found or already deleted."},
+            content={"message": "Zamestnanec nebol nájdený alebo už bol odstránený."},
         )
 
     try:
         db.delete(employee)
         db.commit()
-        return {"message": "Employee deleted successfully."}
+        return {"message": "Zamestnanec bol úspešne odstránený."}
     except SQLAlchemyError as error:
         db.rollback()
         raise HTTPException(
@@ -152,11 +152,11 @@ def clock_in(employee_id: int, db: Session = Depends(get_db)):
         TimeLog.clock_in_time != None
     ).first()
     if existing_log:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Already clocked in today.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Dnes už bolo vykonané prihlásenie.")
     new_log = TimeLog(employee_id=employee_id, date=today, clock_in_time=now)
     db.add(new_log)
     db.commit()
-    return {"message": f"Clocked in at {now.strftime('%H:%M:%S')}"}
+    return {"message": f"Prihlásenie o {now.strftime('%H:%M:%S')}"}
 
 
 @app.post("/clock_out/")
@@ -170,10 +170,10 @@ def clock_out(employee_id: int, db: Session = Depends(get_db)):
         TimeLog.clock_out_time == None
     ).first()
     if not log:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Not clocked in or already clocked out.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Nie je prihlásený alebo už bol odhlásený.")
     log.clock_out_time = now
     db.commit()
-    return {"message": f"Clocked out at {now.strftime('%H:%M:%S')}"}
+    return {"message": f"Odhlásenie o {now.strftime('%H:%M:%S')}"}
 
 
 @app.post("/start_lunch/")
@@ -190,11 +190,11 @@ def start_lunch(employee_id: int, db: Session = Depends(get_db)):
     if not log:
         raise HTTPException(
             status_code=400,
-            detail="Cannot start lunch. Ensure you are clocked in and have not already started lunch."
+            detail="Nie je možné začať obed. Uistite sa, že ste prihlásený a obed ešte nezačal."
         )
     log.lunch_start_time = now
     db.commit()
-    return {"message": f"Lunch started at {now.strftime('%H:%M:%S')}"}
+    return {"message": f"Obed sa začal o {now.strftime('%H:%M:%S')}"}
 
 
 @app.post("/end_lunch/")
@@ -212,11 +212,11 @@ def end_lunch(employee_id: int, db: Session = Depends(get_db)):
     if not log:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot end lunch. Ensure you have started lunch and are still clocked in."
+            detail="Nie je možné ukončiť obed. Uistite sa, že obed začal a ste stále prihlásený."
         )
     log.lunch_end_time = now
     db.commit()
-    return {"message": f"Lunch ended at {now.strftime('%H:%M:%S')}"}
+    return {"message": f"Obed sa skončil o {now.strftime('%H:%M:%S')}"}
 
 
 @app.get("/logs/{employee_id}/{month_year}")
@@ -230,7 +230,7 @@ def get_employee_logs_for_month(
     except ValueError:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid month-year format. Use MM-YYYY."
+            detail="Neplatný formát mesiaca a roka. Použite MM-YYYY."
         )
 
     start_date = date(year, month, 1)
@@ -261,7 +261,7 @@ def get_employee_logs_for_month(
     except SQLAlchemyError as error:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error retrieving logs: {str(error)}"
+            detail=f"Chyba pri načítaní záznamov: {str(error)}"
         )
 
 
@@ -280,7 +280,7 @@ def get_logs(employee_name: str = None, date_from: str = None, date_to: str = No
             except ValueError:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Invalid date_from format. Use YYYY-MM-DD."
+                    detail="Neplatný formát date_from. Použite YYYY-MM-DD."
                 )
         if date_to:
             try:
@@ -289,10 +289,10 @@ def get_logs(employee_name: str = None, date_from: str = None, date_to: str = No
             except ValueError:
                 raise HTTPException(
                     status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Invalid date_to format. Use YYYY-MM-DD."
+                    detail="Neplatný formát date_to. Použite YYYY-MM-DD."
                 )
 
-        logs = query.order_by(TimeLog.date.desc()).all()  # [] if none
+        logs = query.order_by(TimeLog.date.desc()).all()
         result = []
         for log in logs:
             result.append({
@@ -309,7 +309,7 @@ def get_logs(employee_name: str = None, date_from: str = None, date_to: str = No
     except SQLAlchemyError as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error retrieving logs: {str(e)}"
+            detail=f"Chyba pri načítaní záznamov: {str(e)}"
         )
 
 
