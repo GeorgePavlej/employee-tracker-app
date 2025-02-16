@@ -29,7 +29,7 @@
     <!-- App Bar -->
     <v-app-bar app color="primary" dark>
       <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
-      <v-toolbar-title>Manažér zamestnancov</v-toolbar-title>
+      <v-toolbar-title>Employee Manager</v-toolbar-title>
       <v-spacer></v-spacer>
       <div class="d-none d-md-flex">
         <v-btn
@@ -37,42 +37,42 @@
             :class="{'font-weight-bold underline': currentSection === 'clockInOut'}"
             @click="showSection('clockInOut')"
         >
-          Príchod/Odchod
+          Clock In/Out
         </v-btn>
         <v-btn
             text
             :class="{'font-weight-bold underline': currentSection === 'logs'}"
             @click="showSection('logs')"
         >
-          Záznamy
+          Logs
         </v-btn>
         <v-btn
             text
             :class="{'font-weight-bold underline': currentSection === 'shifts'}"
             @click="showSection('shifts')"
         >
-          Zmeny
+          Shifts
         </v-btn>
         <v-btn
             text
             :class="{'font-weight-bold underline': currentSection === 'reports'}"
             @click="showSection('reports')"
         >
-          Reporty
+          Reports
         </v-btn>
         <v-btn
             text
             :class="{'font-weight-bold underline': currentSection === 'leaveManagement'}"
             @click="showSection('leaveManagement')"
         >
-          Správa dovoleniek
+          Leave Management
         </v-btn>
         <v-btn
             text
             :class="{'font-weight-bold underline': currentSection === 'employeeManagement'}"
             @click="showSection('employeeManagement')"
         >
-          Správa zamestnancov
+          Employee Management
         </v-btn>
       </div>
     </v-app-bar>
@@ -82,13 +82,13 @@
       <v-container fluid class="mt-4">
         <!-- CLOCK IN/OUT SECTION -->
         <div v-if="currentSection === 'clockInOut'">
-          <h2>Príchod/Odchod</h2>
+          <h2>Clock In/Out</h2>
           <v-select
               v-model="selectedEmployeeClock"
               :items="employees"
               item-title="name"
               item-value="employee_id"
-              label="Vyberte zamestnanca"
+              label="Select Employee"
               outlined
           ></v-select>
 
@@ -99,7 +99,7 @@
                 @click="clockIn"
                 :disabled="!selectedEmployeeClock"
             >
-              Príchod
+              Clock In
             </v-btn>
             <v-btn
                 color="secondary"
@@ -107,7 +107,7 @@
                 @click="clockOut"
                 :disabled="!selectedEmployeeClock"
             >
-              Odchod
+              Clock Out
             </v-btn>
             <v-btn
                 color="warning"
@@ -115,26 +115,26 @@
                 @click="startLunch"
                 :disabled="!selectedEmployeeClock"
             >
-              Začať obed
+              Start Lunch
             </v-btn>
             <v-btn
                 color="success"
                 @click="endLunch"
                 :disabled="!selectedEmployeeClock"
             >
-              Ukončiť obed
+              End Lunch
             </v-btn>
           </div>
         </div>
 
         <!-- LOGS SECTION -->
         <div v-if="currentSection === 'logs'">
-          <h2>Prehľad záznamov</h2>
+          <h2>View Logs</h2>
           <v-row dense>
             <v-col cols="12" md="3">
               <v-text-field
                   v-model="logsFilter.name"
-                  label="Meno zamestnanca (obsahuje)"
+                  label="Employee Name (contains)"
                   outlined
               ></v-text-field>
             </v-col>
@@ -142,7 +142,7 @@
               <v-text-field
                   v-model="logsFilter.dateFrom"
                   type="date"
-                  label="Dátum od"
+                  label="Date From"
                   outlined
               ></v-text-field>
             </v-col>
@@ -150,30 +150,30 @@
               <v-text-field
                   v-model="logsFilter.dateTo"
                   type="date"
-                  label="Dátum do"
+                  label="Date To"
                   outlined
               ></v-text-field>
             </v-col>
             <v-col cols="12" md="3" class="text-right">
-              <v-btn color="primary" @click="viewLogs">Filtrovať záznamy</v-btn>
+              <v-btn color="primary" @click="viewLogs">Filter Logs</v-btn>
             </v-col>
           </v-row>
 
           <v-data-table :items="logs" class="mt-4" dense>
             <template v-slot:headers>
               <tr>
-                <th class="text-left">Meno zamestnanca</th>
-                <th class="text-left">Dátum</th>
-                <th class="text-left">Príchod</th>
-                <th class="text-left">Odchod</th>
-                <th class="text-left">Začiatok obeda</th>
-                <th class="text-left">Koniec obeda</th>
+                <th class="text-left">Employee Name</th>
+                <th class="text-left">Date</th>
+                <th class="text-left">Clock In</th>
+                <th class="text-left">Clock Out</th>
+                <th class="text-left">Lunch Start</th>
+                <th class="text-left">Lunch End</th>
               </tr>
             </template>
             <template v-slot:body="{ items }">
               <tr v-if="items.length === 0">
                 <td colspan="6" class="text-center">
-                  Neboli nájdené žiadne záznamy pre dané filtre.
+                  No logs found for the given filters.
                 </td>
               </tr>
               <tr v-for="(log, index) in items" :key="index">
@@ -188,11 +188,349 @@
           </v-data-table>
         </div>
 
+        <!-- SHIFTS SECTION -->
+        <div v-if="currentSection === 'shifts'">
+          <h2>Shift Scheduling</h2>
+          <v-form ref="shiftForm">
+            <v-row dense>
+              <v-col cols="12" md="3">
+                <v-select
+                    v-model="shiftFormData.employee_id"
+                    :items="employees"
+                    item-value="employee_id"
+                    item-title="name"
+                    label="Employee"
+                    outlined
+                ></v-select>
+              </v-col>
+              <v-col cols="12" md="3">
+                <v-text-field
+                    v-model="shiftFormData.date"
+                    type="date"
+                    label="Date"
+                    outlined
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12" md="3">
+                <v-text-field
+                    v-model="shiftFormData.start_time"
+                    type="time"
+                    label="Start Time"
+                    outlined
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12" md="3">
+                <v-text-field
+                    v-model="shiftFormData.end_time"
+                    type="time"
+                    label="End Time"
+                    outlined
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12" class="text-right">
+                <v-btn color="primary" @click="createShift">
+                  Create Shift
+                </v-btn>
+              </v-col>
+            </v-row>
+          </v-form>
+
+          <hr class="my-4"/>
+
+          <h3>View Scheduled Shifts</h3>
+          <v-row dense>
+            <v-col cols="12" md="3">
+              <v-select
+                  v-model="shiftFilter.employee_id"
+                  :items="employees"
+                  item-value="employee_id"
+                  item-title="name"
+                  label="Employee"
+                  outlined
+              ></v-select>
+            </v-col>
+            <v-col cols="12" md="3">
+              <v-text-field
+                  v-model="shiftFilter.date_from"
+                  type="date"
+                  label="Date From"
+                  outlined
+              ></v-text-field>
+            </v-col>
+            <v-col cols="12" md="3">
+              <v-text-field
+                  v-model="shiftFilter.date_to"
+                  type="date"
+                  label="Date To"
+                  outlined
+              ></v-text-field>
+            </v-col>
+            <v-col cols="12" md="3" class="text-right">
+              <v-btn color="primary" @click="loadShifts">
+                Filter Shifts
+              </v-btn>
+            </v-col>
+          </v-row>
+
+          <v-data-table :items="shifts" class="mt-3" dense>
+            <template v-slot:headers>
+              <tr>
+                <th>Employee Name</th>
+                <th>Date</th>
+                <th>Start</th>
+                <th>End</th>
+              </tr>
+            </template>
+            <template v-slot:body="{ items }">
+              <tr v-if="items.length === 0">
+                <td colspan="4" class="text-center">
+                  No shifts found for the given filters.
+                </td>
+              </tr>
+              <tr v-for="(shift, index) in items" :key="index">
+                <td>{{ shift.employee_name }}</td>
+                <td>{{ shift.date }}</td>
+                <td>{{ shift.start_time }}</td>
+                <td>{{ shift.end_time }}</td>
+              </tr>
+            </template>
+          </v-data-table>
+        </div>
+
+        <!-- REPORTS SECTION -->
+        <div v-if="currentSection === 'reports'">
+          <h2>Attendance Reports</h2>
+          <v-row dense>
+            <v-col cols="12" md="3">
+              <v-select
+                  v-model="reportFilter.employee_id"
+                  :items="employees"
+                  item-value="employee_id"
+                  item-title="name"
+                  label="Employee"
+                  outlined
+              ></v-select>
+            </v-col>
+            <v-col cols="12" md="3">
+              <v-text-field
+                  v-model="reportFilter.date_from"
+                  type="date"
+                  label="Date From"
+                  outlined
+              ></v-text-field>
+            </v-col>
+            <v-col cols="12" md="3">
+              <v-text-field
+                  v-model="reportFilter.date_to"
+                  type="date"
+                  label="Date To"
+                  outlined
+              ></v-text-field>
+            </v-col>
+            <v-col cols="12" md="3" class="text-right">
+              <v-btn color="primary" @click="generateAttendanceReport">
+                Generate Report
+              </v-btn>
+            </v-col>
+          </v-row>
+
+          <div class="mt-4">
+            <div v-if="reportResult">
+              <h3>
+                Attendance Report for Employee ID:
+                {{ reportResult.employee_id }}
+              </h3>
+              <p>Date Range: {{ reportResult.date_range }}</p>
+              <p>
+                <strong>Total Hours Worked:</strong>
+                {{ formatHours(reportResult.total_hours_worked) }}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- LEAVE MANAGEMENT SECTION -->
+        <div v-if="currentSection === 'leaveManagement'">
+          <h2>Leave Management</h2>
+          <h4>Submit a Leave Request</h4>
+          <v-form ref="leaveForm">
+            <v-row dense>
+              <v-col cols="12" md="3">
+                <v-select
+                    v-model="leaveRequest.employee_id"
+                    :items="employees"
+                    item-value="employee_id"
+                    item-title="name"
+                    label="Employee"
+                    outlined
+                ></v-select>
+              </v-col>
+              <v-col cols="12" md="3">
+                <v-text-field
+                    v-model="leaveRequest.start_date"
+                    type="date"
+                    label="Start Date"
+                    outlined
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12" md="3">
+                <v-text-field
+                    v-model="leaveRequest.end_date"
+                    type="date"
+                    label="End Date"
+                    outlined
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12">
+                <v-text-field
+                    v-model="leaveRequest.reason"
+                    label="Reason (optional)"
+                    outlined
+                    textarea
+                    rows="2"
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12" class="text-right">
+                <v-btn color="primary" @click="submitLeaveRequest">
+                  Submit Leave Request
+                </v-btn>
+              </v-col>
+            </v-row>
+          </v-form>
+
+          <hr class="my-4"/>
+
+          <h3>Leave Requests</h3>
+          <v-data-table :items="leaveRequests" dense>
+            <template v-slot:headers>
+              <tr>
+                <th>Employee Name</th>
+                <th>Start Date</th>
+                <th>End Date</th>
+                <th>Reason</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </template>
+            <template v-slot:body="{ items }">
+              <tr v-if="items.length === 0">
+                <td colspan="6" class="text-center">
+                  No leave requests found.
+                </td>
+              </tr>
+              <tr v-for="(request, index) in items" :key="index">
+                <td>{{ request.employee_name }}</td>
+                <td>{{ request.start_date }}</td>
+                <td>{{ request.end_date }}</td>
+                <td>{{ request.reason || '' }}</td>
+                <td>{{ request.status }}</td>
+                <td>
+                  <div v-if="request.status === 'Pending'">
+                    <v-btn
+                        color="success"
+                        small
+                        @click="updateLeaveRequestStatus(request.leave_id, 'Approved')"
+                    >
+                      Approve
+                    </v-btn>
+                    <v-btn
+                        color="error"
+                        small
+                        @click="updateLeaveRequestStatus(request.leave_id, 'Rejected')"
+                    >
+                      Reject
+                    </v-btn>
+                  </div>
+                </td>
+              </tr>
+            </template>
+          </v-data-table>
+        </div>
+
+        <!-- EMPLOYEE MANAGEMENT SECTION -->
+        <div v-if="currentSection === 'employeeManagement'">
+          <h2>Employee Management</h2>
+
+          <v-form ref="employeeForm">
+            <v-row dense>
+              <v-col cols="12" md="4">
+                <v-text-field
+                    v-model="employeeFormData.name"
+                    label="Employee Name"
+                    outlined
+                ></v-text-field>
+              </v-col>
+              <v-col cols="12" md="4" class="text-right">
+                <v-btn
+                    color="primary"
+                    v-if="!editMode"
+                    @click="createEmployee"
+                >
+                  Create Employee
+                </v-btn>
+
+                <v-btn
+                    color="success"
+                    v-if="editMode"
+                    @click="updateEmployee"
+                >
+                  Update Employee
+                </v-btn>
+
+                <v-btn
+                    color="secondary"
+                    v-if="editMode"
+                    @click="cancelEdit"
+                >
+                  Cancel
+                </v-btn>
+              </v-col>
+            </v-row>
+          </v-form>
+
+          <hr class="my-4"/>
+
+          <v-data-table :items="employees" dense>
+            <template v-slot:headers>
+              <tr>
+                <th>Employee ID</th>
+                <th>Name</th>
+                <th class="text-right">Actions</th>
+              </tr>
+            </template>
+            <template v-slot:body="{ items }">
+              <tr v-if="items.length === 0">
+                <td colspan="3" class="text-center">
+                  No employees found.
+                </td>
+              </tr>
+              <tr v-for="(emp, index) in items" :key="index">
+                <td>{{ emp.employee_id }}</td>
+                <td>{{ emp.name }}</td>
+                <td class="text-right">
+                  <v-btn
+                      small
+                      color="warning"
+                      @click="editEmployee(emp)"
+                  >
+                    Edit
+                  </v-btn>
+                  <v-btn
+                      small
+                      color="error"
+                      @click="deleteEmployee(emp.employee_id)"
+                  >
+                    Delete
+                  </v-btn>
+                </td>
+              </tr>
+            </template>
+          </v-data-table>
+        </div>
       </v-container>
     </v-main>
   </v-app>
 </template>
-
 
 <script>
 const baseURL = process.env.VUE_APP_API_URL;
