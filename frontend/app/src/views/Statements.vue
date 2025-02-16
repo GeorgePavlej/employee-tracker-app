@@ -29,7 +29,7 @@
     <!-- App Bar -->
     <v-app-bar app color="primary" dark>
       <v-app-bar-nav-icon @click="drawer = !drawer"></v-app-bar-nav-icon>
-      <v-toolbar-title>Employee Manager</v-toolbar-title>
+      <v-toolbar-title>Správca zamestnancov</v-toolbar-title>
       <v-spacer></v-spacer>
       <div class="d-none d-md-flex">
         <v-btn
@@ -37,42 +37,42 @@
             :class="{'font-weight-bold underline': currentSection === 'clockInOut'}"
             @click="showSection('clockInOut')"
         >
-          Clock In/Out
+          Príchod/Odchod
         </v-btn>
         <v-btn
             text
             :class="{'font-weight-bold underline': currentSection === 'logs'}"
             @click="showSection('logs')"
         >
-          Logs
+          Záznamy
         </v-btn>
         <v-btn
             text
             :class="{'font-weight-bold underline': currentSection === 'shifts'}"
             @click="showSection('shifts')"
         >
-          Shifts
+          Smeny
         </v-btn>
         <v-btn
             text
             :class="{'font-weight-bold underline': currentSection === 'reports'}"
             @click="showSection('reports')"
         >
-          Reports
+          Správy
         </v-btn>
         <v-btn
             text
             :class="{'font-weight-bold underline': currentSection === 'leaveManagement'}"
             @click="showSection('leaveManagement')"
         >
-          Leave Management
+          Správa dovoleniek
         </v-btn>
         <v-btn
             text
             :class="{'font-weight-bold underline': currentSection === 'employeeManagement'}"
             @click="showSection('employeeManagement')"
         >
-          Employee Management
+          Správa zamestnancov
         </v-btn>
       </div>
     </v-app-bar>
@@ -82,13 +82,13 @@
       <v-container fluid class="mt-4">
         <!-- CLOCK IN/OUT SECTION -->
         <div v-if="currentSection === 'clockInOut'">
-          <h2>Clock In/Out</h2>
+          <h2>Príchod/Odchod</h2>
           <v-select
               v-model="selectedEmployeeClock"
               :items="employees"
               item-title="name"
               item-value="employee_id"
-              label="Select Employee"
+              label="Vyberte zamestnanca"
               outlined
           ></v-select>
 
@@ -99,7 +99,7 @@
                 @click="clockIn"
                 :disabled="!selectedEmployeeClock"
             >
-              Clock In
+              Príchod
             </v-btn>
             <v-btn
                 color="secondary"
@@ -107,7 +107,7 @@
                 @click="clockOut"
                 :disabled="!selectedEmployeeClock"
             >
-              Clock Out
+              Odchod
             </v-btn>
             <v-btn
                 color="warning"
@@ -115,26 +115,26 @@
                 @click="startLunch"
                 :disabled="!selectedEmployeeClock"
             >
-              Start Lunch
+              Začať obed
             </v-btn>
             <v-btn
                 color="success"
                 @click="endLunch"
                 :disabled="!selectedEmployeeClock"
             >
-              End Lunch
+              Ukončiť obed
             </v-btn>
           </div>
         </div>
 
         <!-- LOGS SECTION -->
         <div v-if="currentSection === 'logs'">
-          <h2>View Logs</h2>
+          <h2>Zobraziť záznamy</h2>
           <v-row dense>
             <v-col cols="12" md="3">
               <v-text-field
                   v-model="logsFilter.name"
-                  label="Employee Name (contains)"
+                  label="Meno zamestnanca (obsahuje)"
                   outlined
               ></v-text-field>
             </v-col>
@@ -142,7 +142,7 @@
               <v-text-field
                   v-model="logsFilter.dateFrom"
                   type="date"
-                  label="Date From"
+                  label="Dátum od"
                   outlined
               ></v-text-field>
             </v-col>
@@ -150,30 +150,30 @@
               <v-text-field
                   v-model="logsFilter.dateTo"
                   type="date"
-                  label="Date To"
+                  label="Dátum do"
                   outlined
               ></v-text-field>
             </v-col>
             <v-col cols="12" md="3" class="text-right">
-              <v-btn color="primary" @click="viewLogs">Filter Logs</v-btn>
+              <v-btn color="primary" @click="viewLogs">Filtrovať záznamy</v-btn>
             </v-col>
           </v-row>
 
           <v-data-table :items="logs" class="mt-4" dense>
             <template v-slot:headers>
               <tr>
-                <th class="text-left">Employee Name</th>
-                <th class="text-left">Date</th>
-                <th class="text-left">Clock In</th>
-                <th class="text-left">Clock Out</th>
-                <th class="text-left">Lunch Start</th>
-                <th class="text-left">Lunch End</th>
+                <th class="text-left">Meno zamestnanca</th>
+                <th class="text-left">Dátum</th>
+                <th class="text-left">Príchod</th>
+                <th class="text-left">Odchod</th>
+                <th class="text-left">Začiatok obeda</th>
+                <th class="text-left">Koniec obeda</th>
               </tr>
             </template>
             <template v-slot:body="{ items }">
               <tr v-if="items.length === 0">
                 <td colspan="6" class="text-center">
-                  No logs found for the given filters.
+                  Pre dané filtre neboli nájdené žiadne záznamy.
                 </td>
               </tr>
               <tr v-for="(log, index) in items" :key="index">
@@ -190,7 +190,7 @@
 
         <!-- SHIFTS SECTION -->
         <div v-if="currentSection === 'shifts'">
-          <h2>Shift Scheduling</h2>
+          <h2>Plánovanie zmien</h2>
           <v-form ref="shiftForm">
             <v-row dense>
               <v-col cols="12" md="3">
@@ -199,7 +199,7 @@
                     :items="employees"
                     item-value="employee_id"
                     item-title="name"
-                    label="Employee"
+                    label="Zamestnanec"
                     outlined
                 ></v-select>
               </v-col>
@@ -207,7 +207,7 @@
                 <v-text-field
                     v-model="shiftFormData.date"
                     type="date"
-                    label="Date"
+                    label="Dátum"
                     outlined
                 ></v-text-field>
               </v-col>
@@ -215,7 +215,7 @@
                 <v-text-field
                     v-model="shiftFormData.start_time"
                     type="time"
-                    label="Start Time"
+                    label="Čas začiatku"
                     outlined
                 ></v-text-field>
               </v-col>
@@ -223,13 +223,13 @@
                 <v-text-field
                     v-model="shiftFormData.end_time"
                     type="time"
-                    label="End Time"
+                    label="Čas ukončenia"
                     outlined
                 ></v-text-field>
               </v-col>
               <v-col cols="12" class="text-right">
                 <v-btn color="primary" @click="createShift">
-                  Create Shift
+                  Vytvoriť zmenu
                 </v-btn>
               </v-col>
             </v-row>
@@ -237,7 +237,7 @@
 
           <hr class="my-4"/>
 
-          <h3>View Scheduled Shifts</h3>
+          <h3>Zobraziť plánované zmeny</h3>
           <v-row dense>
             <v-col cols="12" md="3">
               <v-select
@@ -245,7 +245,7 @@
                   :items="employees"
                   item-value="employee_id"
                   item-title="name"
-                  label="Employee"
+                  label="Zamestnanec"
                   outlined
               ></v-select>
             </v-col>
@@ -253,7 +253,7 @@
               <v-text-field
                   v-model="shiftFilter.date_from"
                   type="date"
-                  label="Date From"
+                  label="Dátum od"
                   outlined
               ></v-text-field>
             </v-col>
@@ -261,13 +261,13 @@
               <v-text-field
                   v-model="shiftFilter.date_to"
                   type="date"
-                  label="Date To"
+                  label="Dátum do"
                   outlined
               ></v-text-field>
             </v-col>
             <v-col cols="12" md="3" class="text-right">
               <v-btn color="primary" @click="loadShifts">
-                Filter Shifts
+                Filtrovať zmeny
               </v-btn>
             </v-col>
           </v-row>
@@ -275,16 +275,16 @@
           <v-data-table :items="shifts" class="mt-3" dense>
             <template v-slot:headers>
               <tr>
-                <th>Employee Name</th>
-                <th>Date</th>
-                <th>Start</th>
-                <th>End</th>
+                <th>Meno zamestnanca</th>
+                <th>Dátum</th>
+                <th>Začiatok</th>
+                <th>Koniec</th>
               </tr>
             </template>
             <template v-slot:body="{ items }">
               <tr v-if="items.length === 0">
                 <td colspan="4" class="text-center">
-                  No shifts found for the given filters.
+                  Pre dané filtre neboli nájdené žiadne zmeny.
                 </td>
               </tr>
               <tr v-for="(shift, index) in items" :key="index">
@@ -299,7 +299,7 @@
 
         <!-- REPORTS SECTION -->
         <div v-if="currentSection === 'reports'">
-          <h2>Attendance Reports</h2>
+          <h2>Dochádzkové správy</h2>
           <v-row dense>
             <v-col cols="12" md="3">
               <v-select
@@ -307,7 +307,7 @@
                   :items="employees"
                   item-value="employee_id"
                   item-title="name"
-                  label="Employee"
+                  label="Zamestnanec"
                   outlined
               ></v-select>
             </v-col>
@@ -315,7 +315,7 @@
               <v-text-field
                   v-model="reportFilter.date_from"
                   type="date"
-                  label="Date From"
+                  label="Dátum od"
                   outlined
               ></v-text-field>
             </v-col>
@@ -323,13 +323,13 @@
               <v-text-field
                   v-model="reportFilter.date_to"
                   type="date"
-                  label="Date To"
+                  label="Dátum do"
                   outlined
               ></v-text-field>
             </v-col>
             <v-col cols="12" md="3" class="text-right">
               <v-btn color="primary" @click="generateAttendanceReport">
-                Generate Report
+                Vygenerovať správu
               </v-btn>
             </v-col>
           </v-row>
@@ -337,12 +337,12 @@
           <div class="mt-4">
             <div v-if="reportResult">
               <h3>
-                Attendance Report for Employee ID:
+                Dochádzková správa pre zamestnanca ID:
                 {{ reportResult.employee_id }}
               </h3>
-              <p>Date Range: {{ reportResult.date_range }}</p>
+              <p>Rozsah dátumov: {{ reportResult.date_range }}</p>
               <p>
-                <strong>Total Hours Worked:</strong>
+                <strong>Celkový odpracovaný čas:</strong>
                 {{ formatHours(reportResult.total_hours_worked) }}
               </p>
             </div>
@@ -351,8 +351,8 @@
 
         <!-- LEAVE MANAGEMENT SECTION -->
         <div v-if="currentSection === 'leaveManagement'">
-          <h2>Leave Management</h2>
-          <h4>Submit a Leave Request</h4>
+          <h2>Správa dovoleniek</h2>
+          <h4>Odoslať žiadosť o dovolenku</h4>
           <v-form ref="leaveForm">
             <v-row dense>
               <v-col cols="12" md="3">
@@ -361,7 +361,7 @@
                     :items="employees"
                     item-value="employee_id"
                     item-title="name"
-                    label="Employee"
+                    label="Zamestnanec"
                     outlined
                 ></v-select>
               </v-col>
@@ -369,7 +369,7 @@
                 <v-text-field
                     v-model="leaveRequest.start_date"
                     type="date"
-                    label="Start Date"
+                    label="Dátum začiatku"
                     outlined
                 ></v-text-field>
               </v-col>
@@ -377,14 +377,14 @@
                 <v-text-field
                     v-model="leaveRequest.end_date"
                     type="date"
-                    label="End Date"
+                    label="Dátum ukončenia"
                     outlined
                 ></v-text-field>
               </v-col>
               <v-col cols="12">
                 <v-text-field
                     v-model="leaveRequest.reason"
-                    label="Reason (optional)"
+                    label="Dôvod (nepovinné)"
                     outlined
                     textarea
                     rows="2"
@@ -392,7 +392,7 @@
               </v-col>
               <v-col cols="12" class="text-right">
                 <v-btn color="primary" @click="submitLeaveRequest">
-                  Submit Leave Request
+                  Odoslať žiadosť o dovolenku
                 </v-btn>
               </v-col>
             </v-row>
@@ -400,22 +400,22 @@
 
           <hr class="my-4"/>
 
-          <h3>Leave Requests</h3>
+          <h3>Žiadosti o dovolenku</h3>
           <v-data-table :items="leaveRequests" dense>
             <template v-slot:headers>
               <tr>
-                <th>Employee Name</th>
-                <th>Start Date</th>
-                <th>End Date</th>
-                <th>Reason</th>
-                <th>Status</th>
-                <th>Actions</th>
+                <th>Meno zamestnanca</th>
+                <th>Dátum začiatku</th>
+                <th>Dátum ukončenia</th>
+                <th>Dôvod</th>
+                <th>Stav</th>
+                <th>Akcie</th>
               </tr>
             </template>
             <template v-slot:body="{ items }">
               <tr v-if="items.length === 0">
                 <td colspan="6" class="text-center">
-                  No leave requests found.
+                  Žiadne žiadosti o dovolenku neboli nájdené.
                 </td>
               </tr>
               <tr v-for="(request, index) in items" :key="index">
@@ -431,14 +431,14 @@
                         small
                         @click="updateLeaveRequestStatus(request.leave_id, 'Approved')"
                     >
-                      Approve
+                      Schváliť
                     </v-btn>
                     <v-btn
                         color="error"
                         small
                         @click="updateLeaveRequestStatus(request.leave_id, 'Rejected')"
                     >
-                      Reject
+                      Zamietnuť
                     </v-btn>
                   </div>
                 </td>
@@ -449,14 +449,14 @@
 
         <!-- EMPLOYEE MANAGEMENT SECTION -->
         <div v-if="currentSection === 'employeeManagement'">
-          <h2>Employee Management</h2>
+          <h2>Správa zamestnancov</h2>
 
           <v-form ref="employeeForm">
             <v-row dense>
               <v-col cols="12" md="4">
                 <v-text-field
                     v-model="employeeFormData.name"
-                    label="Employee Name"
+                    label="Meno zamestnanca"
                     outlined
                 ></v-text-field>
               </v-col>
@@ -466,7 +466,7 @@
                     v-if="!editMode"
                     @click="createEmployee"
                 >
-                  Create Employee
+                  Vytvoriť zamestnanca
                 </v-btn>
 
                 <v-btn
@@ -474,7 +474,7 @@
                     v-if="editMode"
                     @click="updateEmployee"
                 >
-                  Update Employee
+                  Aktualizovať zamestnanca
                 </v-btn>
 
                 <v-btn
@@ -482,7 +482,7 @@
                     v-if="editMode"
                     @click="cancelEdit"
                 >
-                  Cancel
+                  Zrušiť
                 </v-btn>
               </v-col>
             </v-row>
@@ -493,15 +493,15 @@
           <v-data-table :items="employees" dense>
             <template v-slot:headers>
               <tr>
-                <th>Employee ID</th>
-                <th>Name</th>
-                <th class="text-right">Actions</th>
+                <th>ID zamestnanca</th>
+                <th>Meno</th>
+                <th class="text-right">Akcie</th>
               </tr>
             </template>
             <template v-slot:body="{ items }">
               <tr v-if="items.length === 0">
                 <td colspan="3" class="text-center">
-                  No employees found.
+                  Žiadni zamestnanci neboli nájdení.
                 </td>
               </tr>
               <tr v-for="(emp, index) in items" :key="index">
@@ -513,14 +513,14 @@
                       color="warning"
                       @click="editEmployee(emp)"
                   >
-                    Edit
+                    Upraviť
                   </v-btn>
                   <v-btn
                       small
                       color="error"
                       @click="deleteEmployee(emp.employee_id)"
                   >
-                    Delete
+                    Vymazať
                   </v-btn>
                 </td>
               </tr>
@@ -541,12 +541,12 @@ export default {
       drawer: false,
       currentSection: 'clockInOut',
       menuItems: [
-        {id: 'clockInOut', title: 'Clock In/Out', icon: 'mdi-clock-outline'},
-        {id: 'logs', title: 'Logs', icon: 'mdi-file-document-outline'},
-        {id: 'shifts', title: 'Shifts', icon: 'mdi-calendar-clock'},
-        {id: 'reports', title: 'Reports', icon: 'mdi-chart-bar'},
-        {id: 'leaveManagement', title: 'Leave Management', icon: 'mdi-beach'},
-        {id: 'employeeManagement', title: 'Employee Management', icon: 'mdi-account-group'},
+        {id: 'clockInOut', title: 'Príchod/Odchod', icon: 'mdi-clock-outline'},
+        {id: 'logs', title: 'Záznamy', icon: 'mdi-file-document-outline'},
+        {id: 'shifts', title: 'Smeny', icon: 'mdi-calendar-clock'},
+        {id: 'reports', title: 'Správy', icon: 'mdi-chart-bar'},
+        {id: 'leaveManagement', title: 'Správa dovoleniek', icon: 'mdi-beach'},
+        {id: 'employeeManagement', title: 'Správa zamestnancov', icon: 'mdi-account-group'},
       ],
       employees: [],
       selectedEmployeeClock: null,
