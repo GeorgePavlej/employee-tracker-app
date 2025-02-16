@@ -326,7 +326,7 @@ def create_shift(shift: ShiftCreate, db: Session = Depends(get_db)):
         if on_leave:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot schedule shift: The employee is on approved leave for this date."
+                detail="Nie je možné naplánovať zmenu: Zamestnanec má schválenú dovolenku na tento dátum."
             )
 
         new_shift = Shift(**shift.dict())
@@ -335,11 +335,11 @@ def create_shift(shift: ShiftCreate, db: Session = Depends(get_db)):
         db.refresh(new_shift)
         return new_shift
 
-    except SQLAlchemyError as e:
+    except SQLAlchemyError as error:
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error creating shift: {str(e)}"
+            detail=f"Chyba pri vytváraní zmeny: {str(error)}"
         )
 
 
@@ -370,7 +370,7 @@ def get_shifts(employee_id: int = None, date_from: date = None, date_to: date = 
     except SQLAlchemyError as error:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error retrieving shifts: {str(error)}"
+            detail=f"Chyba pri načítaní zmien: {str(error)}"
         )
 
 
@@ -401,7 +401,7 @@ def attendance_report(
     return {
         "employee_id": employee_id,
         "total_hours_worked": total_hours_worked,
-        "date_range": f"{date_from} to {date_to}"
+        "date_range": f"{date_from} až {date_to}"
     }
 
 
@@ -414,7 +414,7 @@ def submit_leave_request(leave_request: LeaveRequestCreate, db: Session = Depend
         LeaveRequest.end_date >= leave_request.start_date
     ).first()
     if overlapping_leave:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Leave request overlaps with existing approved leave.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Žiadosť o dovolenku sa prekrýva s existujúcou schválenou dovolenkou.")
 
     new_leave_request = LeaveRequest(**leave_request.dict())
     db.add(new_leave_request)
@@ -444,9 +444,9 @@ def get_leave_requests(db: Session = Depends(get_db)):
 def update_leave_request_status(leave_id: int, status: str = Query(...), db: Session = Depends(get_db)):
     leave_request = db.query(LeaveRequest).filter(LeaveRequest.leave_id == leave_id).first()
     if not leave_request:
-        raise HTTPException(status_code=404, detail="Leave request not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Žiadosť o dovolenku nebola nájdená")
     if status not in ["Approved", "Rejected"]:
-        raise HTTPException(status_code=400, detail="Invalid status")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Neplatný stav")
     leave_request.status = status
     db.commit()
     return leave_request
