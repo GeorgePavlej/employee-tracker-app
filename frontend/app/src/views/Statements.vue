@@ -272,29 +272,26 @@
             </v-col>
           </v-row>
 
-          <v-data-table :items="shifts" class="mt-3" dense>
-            <template v-slot:headers>
-              <tr>
-                <th>Meno zamestnanca</th>
-                <th>Dátum</th>
-                <th>Začiatok</th>
-                <th>Koniec</th>
-              </tr>
+          <hr class="my-4"/>
+
+          <h3>Kalendár zmien</h3>
+
+          <v-calendar
+              type="month"
+              :events="calendarEvents"
+              :event-order="orderEvents"
+              height="600"
+          >
+            <template #event="{ event }">
+              <div
+                  class="custom-event d-flex align-center"
+                  :style="{ backgroundColor: event.color }"
+              >
+                <strong>{{ formatTime(event.start) }} - {{ formatTime(event.end) }}</strong>
+                <span class="ml-2">{{ event.title }}</span>
+              </div>
             </template>
-            <template v-slot:body="{ items }">
-              <tr v-if="items.length === 0">
-                <td colspan="4" class="text-center">
-                  Pre dané filtre neboli nájdené žiadne zmeny.
-                </td>
-              </tr>
-              <tr v-for="(shift, index) in items" :key="index">
-                <td>{{ shift.employee_name }}</td>
-                <td>{{ shift.date }}</td>
-                <td>{{ shift.start_time }}</td>
-                <td>{{ shift.end_time }}</td>
-              </tr>
-            </template>
-          </v-data-table>
+          </v-calendar>
         </div>
 
         <!-- REPORTS SECTION -->
@@ -553,25 +550,25 @@ export default {
       logsFilter: {
         name: '',
         dateFrom: '',
-        dateTo: ''
+        dateTo: '',
       },
       logs: [],
       shiftFormData: {
         employee_id: null,
         date: '',
         start_time: '',
-        end_time: ''
+        end_time: '',
       },
       shiftFilter: {
         employee_id: null,
         date_from: '',
-        date_to: ''
+        date_to: '',
       },
       shifts: [],
       reportFilter: {
         employee_id: null,
         date_from: '',
-        date_to: ''
+        date_to: '',
       },
       reportResult: null,
       leaveRequest: {
@@ -589,14 +586,48 @@ export default {
     };
   },
 
+  computed: {
+    calendarEvents() {
+      const colorChoices = ['blue', 'green', 'red', 'orange', 'purple'];
+      return this.shifts.map(shift => {
+        const startStr = `${shift.date}T${shift.start_time}`;
+        const endStr = `${shift.date}T${shift.end_time}`;
+
+        const startDate = new Date(startStr);
+        const endDate = new Date(endStr);
+
+        const randomColor = colorChoices[Math.floor(Math.random() * colorChoices.length)];
+
+        return {
+          title: `${shift.employee_name}`,
+          start: startDate,
+          end: endDate,
+          color: randomColor,
+        };
+      });
+    },
+  },
+
   created() {
     this.loadEmployees();
   },
 
   methods: {
+    orderEvents(a, b) {
+      return a.start - b.start
+    },
+
+
+    formatTime(dateObj) {
+      if (!(dateObj instanceof Date)) return '';
+      return new Intl.DateTimeFormat('sk-SK', {
+        hour: 'numeric',
+        minute: 'numeric',
+      }).format(dateObj);
+    },
+
     showSection(sectionId) {
       this.currentSection = sectionId;
-
       if (sectionId === 'shifts') {
         this.loadShifts();
       } else if (sectionId === 'logs') {
@@ -622,12 +653,12 @@ export default {
     // ---- EMPLOYEES ----
     loadEmployees() {
       fetch(`${baseURL}/employees/`)
-          .then((res) => res.json())
-          .then((data) => {
+          .then(res => res.json())
+          .then(data => {
             console.log('Employees fetched:', data);
             this.employees = data;
           })
-          .catch((error) => console.error('Error fetching employees:', error));
+          .catch(error => console.error('Error fetching employees:', error));
     },
 
     // ---- CLOCK IN/OUT ----
@@ -636,8 +667,8 @@ export default {
       fetch(`${baseURL}/clock_in/?employee_id=${this.selectedEmployeeClock}`, {
         method: 'POST',
       })
-          .then((res) => res.json())
-          .then((data) => {
+          .then(res => res.json())
+          .then(data => {
             alert(data.message || data.detail);
           });
     },
@@ -646,11 +677,11 @@ export default {
       fetch(`${baseURL}/clock_out/?employee_id=${this.selectedEmployeeClock}`, {
         method: 'POST',
       })
-          .then((res) => res.json())
-          .then((data) => {
+          .then(res => res.json())
+          .then(data => {
             alert(data.message || data.detail);
           })
-          .catch((error) => {
+          .catch(error => {
             console.error('Error:', error);
             alert('An error occurred while clocking out.');
           });
@@ -660,11 +691,11 @@ export default {
       fetch(`${baseURL}/start_lunch/?employee_id=${this.selectedEmployeeClock}`, {
         method: 'POST',
       })
-          .then((res) => res.json())
-          .then((data) => {
+          .then(res => res.json())
+          .then(data => {
             alert(data.message || data.detail);
           })
-          .catch((error) => {
+          .catch(error => {
             console.error('Error:', error);
             alert('An error occurred while starting lunch.');
           });
@@ -674,11 +705,11 @@ export default {
       fetch(`${baseURL}/end_lunch/?employee_id=${this.selectedEmployeeClock}`, {
         method: 'POST',
       })
-          .then((res) => res.json())
-          .then((data) => {
+          .then(res => res.json())
+          .then(data => {
             alert(data.message || data.detail);
           })
-          .catch((error) => {
+          .catch(error => {
             console.error('Error:', error);
             alert('An error occurred while ending lunch.');
           });
@@ -686,14 +717,11 @@ export default {
 
     // ---- LOGS ----
     viewLogs() {
-      const nameFilter = this.logsFilter.name;
-      const dateFrom = this.logsFilter.dateFrom;
-      const dateTo = this.logsFilter.dateTo;
-
+      const {name, dateFrom, dateTo} = this.logsFilter;
       let url = `${baseURL}/logs/?`;
       const params = [];
-      if (nameFilter) {
-        params.push(`employee_name=${encodeURIComponent(nameFilter)}`);
+      if (name) {
+        params.push(`employee_name=${encodeURIComponent(name)}`);
       }
       if (dateFrom) {
         params.push(`date_from=${dateFrom}`);
@@ -704,11 +732,11 @@ export default {
       url += params.join('&');
 
       fetch(url)
-          .then((res) => res.json())
-          .then((data) => {
+          .then(res => res.json())
+          .then(data => {
             this.logs = data;
           })
-          .catch((error) => {
+          .catch(error => {
             console.error('Error:', error);
             alert('An error occurred while fetching logs.');
           });
@@ -732,9 +760,9 @@ export default {
           end_time,
         }),
       })
-          .then((res) => {
+          .then(res => {
             if (!res.ok) {
-              return res.json().then((data) => {
+              return res.json().then(data => {
                 throw new Error(data.detail || 'Error creating shift.');
               });
             }
@@ -748,7 +776,7 @@ export default {
             this.shiftFormData.end_time = '';
             this.loadShifts();
           })
-          .catch((error) => {
+          .catch(error => {
             console.error('Error:', error);
             alert(error.message);
           });
@@ -770,7 +798,7 @@ export default {
       url += params.join('&');
 
       fetch(url)
-          .then(async (res) => {
+          .then(async res => {
             if (!res.ok) {
               let err = 'Error fetching shifts.';
               try {
@@ -782,10 +810,10 @@ export default {
             }
             return res.json();
           })
-          .then((data) => {
+          .then(data => {
             this.shifts = Array.isArray(data) ? data : [];
           })
-          .catch((error) => {
+          .catch(error => {
             console.error('Error:', error);
             alert(error.message);
           });
@@ -801,11 +829,11 @@ export default {
 
       const url = `${baseURL}/reports/attendance/?employee_id=${employee_id}&date_from=${date_from}&date_to=${date_to}`;
       fetch(url)
-          .then((res) => res.json())
-          .then((data) => {
+          .then(res => res.json())
+          .then(data => {
             this.reportResult = data;
           })
-          .catch((error) => {
+          .catch(error => {
             console.error('Error:', error);
             alert('An error occurred while generating the report.');
           });
@@ -829,9 +857,9 @@ export default {
           reason,
         }),
       })
-          .then((res) => {
+          .then(res => {
             if (!res.ok) {
-              return res.json().then((data) => {
+              return res.json().then(data => {
                 throw new Error(data.detail || 'Error submitting leave request.');
               });
             }
@@ -845,14 +873,14 @@ export default {
             this.leaveRequest.reason = '';
             this.loadLeaveRequests();
           })
-          .catch((error) => {
+          .catch(error => {
             console.error('Error:', error);
             alert(error.message);
           });
     },
     loadLeaveRequests() {
       fetch(`${baseURL}/leave_requests/`)
-          .then(async (res) => {
+          .then(async res => {
             if (!res.ok) {
               let err = 'Error fetching leave requests.';
               try {
@@ -864,10 +892,10 @@ export default {
             }
             return res.json();
           })
-          .then((data) => {
+          .then(data => {
             this.leaveRequests = Array.isArray(data) ? data : [];
           })
-          .catch((error) => {
+          .catch(error => {
             console.error('Error:', error);
             alert(error.message);
           });
@@ -876,9 +904,9 @@ export default {
       fetch(`${baseURL}/leave_requests/${leaveId}/?status=${status}`, {
         method: 'PUT',
       })
-          .then((res) => {
+          .then(res => {
             if (!res.ok) {
-              return res.json().then((data) => {
+              return res.json().then(data => {
                 throw new Error(data.detail || 'Error updating leave request.');
               });
             }
@@ -888,7 +916,7 @@ export default {
             alert(`Leave request ${status.toLowerCase()} successfully.`);
             this.loadLeaveRequests();
           })
-          .catch((error) => {
+          .catch(error => {
             console.error('Error:', error);
             alert(error.message);
           });
@@ -905,20 +933,20 @@ export default {
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({name: this.employeeFormData.name}),
       })
-          .then((res) => {
+          .then(res => {
             if (!res.ok) {
-              return res.json().then((data) => {
+              return res.json().then(data => {
                 throw new Error(data.detail || 'Error creating employee.');
               });
             }
             return res.json();
           })
-          .then((newEmployee) => {
+          .then(newEmployee => {
             alert('Employee created successfully.');
             this.employeeFormData.name = '';
             this.loadEmployees();
           })
-          .catch((error) => {
+          .catch(error => {
             console.error(error);
             alert(error.message);
           });
@@ -929,7 +957,7 @@ export default {
       fetch(`${baseURL}/employees/${employeeId}/`, {
         method: 'DELETE',
       })
-          .then(async (res) => {
+          .then(async res => {
             if (!res.ok) {
               let err = 'Error deleting employee.';
               try {
@@ -941,16 +969,15 @@ export default {
             }
             return res.json();
           })
-          .then((data) => {
+          .then(data => {
             alert(data.message || 'Employee deleted successfully.');
             this.loadEmployees();
           })
-          .catch((error) => {
+          .catch(error => {
             console.error(error);
             alert(error.message);
           });
     },
-
     editEmployee(emp) {
       this.editMode = true;
       this.employeeFormData.employee_id = emp.employee_id;
@@ -967,20 +994,20 @@ export default {
         headers: {'Content-Type': 'application/json'},
         body: JSON.stringify({name}),
       })
-          .then((res) => {
+          .then(res => {
             if (!res.ok) {
-              return res.json().then((data) => {
+              return res.json().then(data => {
                 throw new Error(data.detail || 'Error updating employee.');
               });
             }
             return res.json();
           })
-          .then((updatedEmployee) => {
+          .then(updatedEmployee => {
             alert('Employee updated successfully.');
             this.cancelEdit();
             this.loadEmployees();
           })
-          .catch((error) => {
+          .catch(error => {
             console.error(error);
             alert(error.message);
           });
@@ -995,6 +1022,7 @@ export default {
 </script>
 
 <style scoped>
+
 @import url('https://cdn.jsdelivr.net/npm/vuetify@3.3.7/dist/vuetify.min.css');
 @import url('https://fonts.googleapis.com/css?family=Roboto:100,300,400,500,700,900');
 @import url('https://cdn.jsdelivr.net/npm/@mdi/font@6.9.96/css/materialdesignicons.min.css');
@@ -1014,4 +1042,13 @@ export default {
 .mt-4 {
   margin-top: 24px;
 }
+
+.custom-event {
+  padding: 2px 4px;
+  margin-bottom: 2px;
+  border-radius: 4px;
+  color: #fff;
+  font-size: 0.75rem;
+}
+
 </style>
