@@ -4,3 +4,6 @@ psycopg2-binary>=2.9.7,<3.0
 python-dotenv==1.0.0
 sqlalchemy==1.4.47
 alembic==1.11.1
+pyjwt==2.8.0
+werkzeug==3.0.1
+python-multipart==0.0.9
