@@ -20,6 +20,8 @@ from sqlalchemy.orm import Session
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
 
+from .auth import employee_auth_router
+
 app = FastAPI()
 
 app.add_middleware(
@@ -29,6 +31,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(employee_auth_router)
 
 
 def get_db():
@@ -88,9 +92,9 @@ def create_employee(employee_data: EmployeeCreate, db: Session = Depends(get_db)
 
 @app.put("/employees/{employee_id}/")
 def update_employee(
-    employee_id: int,
-    employee_data: EmployeeUpdate,
-    db: Session = Depends(get_db)
+        employee_id: int,
+        employee_data: EmployeeUpdate,
+        db: Session = Depends(get_db)
 ):
     if not employee_data.name.strip():
         raise HTTPException(
@@ -221,9 +225,9 @@ def end_lunch(employee_id: int, db: Session = Depends(get_db)):
 
 @app.get("/logs/{employee_id}/{month_year}")
 def get_employee_logs_for_month(
-    employee_id: int,
-    month_year: str,
-    db: Session = Depends(get_db)
+        employee_id: int,
+        month_year: str,
+        db: Session = Depends(get_db)
 ):
     try:
         month, year = map(int, month_year.split("-"))
@@ -414,7 +418,8 @@ def submit_leave_request(leave_request: LeaveRequestCreate, db: Session = Depend
         LeaveRequest.end_date >= leave_request.start_date
     ).first()
     if overlapping_leave:
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Žiadosť o dovolenku sa prekrýva s existujúcou schválenou dovolenkou.")
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST,
+                            detail="Žiadosť o dovolenku sa prekrýva s existujúcou schválenou dovolenkou.")
 
     new_leave_request = LeaveRequest(**leave_request.dict())
     db.add(new_leave_request)

@@ -4,6 +4,21 @@ from typing import Optional
 from pydantic import BaseModel
 
 
+class LoginData(BaseModel):
+    username: str
+    password: str
+
+
+class ResetPassword(BaseModel):
+    current_password: str
+    new_password: str
+    confirm_new_password: str
+
+
+class JWTTokenData(BaseModel):
+    session_token: str
+
+
 class EmployeeBase(BaseModel):
     name: str
 

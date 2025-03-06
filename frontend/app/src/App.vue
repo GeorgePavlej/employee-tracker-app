@@ -1,20 +1,14 @@
 <template>
   <v-app>
     <v-main>
-
-      <Statements />
+      <router-view />
     </v-main>
   </v-app>
 </template>
 
 <script>
-import Statements from './views/Statements.vue';
-
 export default {
-  name: 'App',
-  components: {
-    Statements
-  }
+  name: 'App'
 };
 </script>
 

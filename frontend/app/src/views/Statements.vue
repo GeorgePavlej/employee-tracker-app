@@ -23,6 +23,17 @@
             </div>
           </v-list-item-content>
         </v-list-item>
+        
+        <v-divider class="my-2"></v-divider>
+        
+        <v-list-item @click="logout">
+          <v-list-item-content>
+            <div class="d-flex align-center">
+              <span class="error--text">Odhlásiť sa</span>
+              <v-icon class="ml-2 error--text">mdi-logout</v-icon>
+            </div>
+          </v-list-item-content>
+        </v-list-item>
       </v-list>
     </v-navigation-drawer>
 
@@ -74,7 +85,25 @@
         >
           Správa zamestnancov
         </v-btn>
+        <v-btn
+            text
+            color="error"
+            class="ml-4"
+            @click="logout"
+        >
+          <v-icon left>mdi-logout</v-icon>
+          Odhlásiť sa
+        </v-btn>
       </div>
+      <v-btn
+          v-if="$vuetify.display.mdAndDown"
+          icon
+          color="error"
+          @click="logout"
+          class="ml-2"
+      >
+        <v-icon>mdi-logout</v-icon>
+      </v-btn>
     </v-app-bar>
 
     <!-- Main Content -->
@@ -1016,6 +1045,14 @@ export default {
       this.editMode = false;
       this.employeeFormData.employee_id = null;
       this.employeeFormData.name = '';
+    },
+    logout() {
+      // Clear authentication data
+      localStorage.removeItem('auth');
+      localStorage.removeItem('access_levels');
+      
+      // Redirect to login page
+      this.$router.push({ name: 'login' });
     },
   },
 };
