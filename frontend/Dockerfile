@@ -14,8 +14,9 @@ COPY app ./
 ENV NODE_ENV=production
 ENV GENERATE_SOURCEMAP=false
 
-# Run the build with increased memory and more verbose output
-RUN node --max_old_space_size=4096 node_modules/.bin/vue-cli-service build
+# Print the API URL and run the production build script
+RUN echo "API URL for production: $VUE_APP_API_URL"
+RUN npm run build:production
 
 # Stage 2: Serve with Nginx
 FROM nginx:alpine AS runtime
@@ -23,6 +24,9 @@ FROM nginx:alpine AS runtime
 COPY --from=build-stage /app/dist /usr/share/nginx/html
 
 COPY app/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Create a file to help debug the environment at runtime
+RUN echo "window.API_URL_DEBUG = '${VUE_APP_API_URL}';" > /usr/share/nginx/html/env-config.js
 
 EXPOSE 80
 

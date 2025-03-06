@@ -128,8 +128,11 @@ export default {
       try {
         console.log("Login attempt with:", this.username, this.password);
         
-        // Use the exact endpoint that matches the backend route
-        const url = '/employee/auth/login';
+        // Use the proper API URL from environment variables
+        const baseURL = process.env.VUE_APP_API_URL || '';
+        const url = `${baseURL}/employee/auth/login`;
+        
+        console.log(`Using API URL: ${url}`);
         
         // First try with FormData (which is what one of the backend routes expects)
         try {
