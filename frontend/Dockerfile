@@ -16,7 +16,8 @@ ENV GENERATE_SOURCEMAP=false
 
 # Print the API URL and run the production build script
 RUN echo "API URL for production: $VUE_APP_API_URL"
-RUN npm run build:production
+# RUN npm run build:production
+RUN node --max_old_space_size=4096 node_modules/.bin/vue-cli-service build
 
 # Stage 2: Serve with Nginx
 FROM nginx:alpine AS runtime
