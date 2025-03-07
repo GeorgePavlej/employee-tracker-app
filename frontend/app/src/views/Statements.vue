@@ -87,7 +87,7 @@
         </v-btn>
         <v-btn
             text
-            color="error"
+            color="black"
             class="ml-4"
             @click="logout"
         >
@@ -560,6 +560,8 @@
 
 <script>
 const baseURL = process.env.VUE_APP_API_URL;
+import { clearTokens } from '../utils/auth';
+
 export default {
   name: 'Statements',
   data() {
@@ -1047,11 +1049,8 @@ export default {
       this.employeeFormData.name = '';
     },
     logout() {
-      // Clear authentication data
-      localStorage.removeItem('auth');
-      localStorage.removeItem('access_levels');
+      clearTokens();
       
-      // Redirect to login page
       this.$router.push({ name: 'login' });
     },
   },

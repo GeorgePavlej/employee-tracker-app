@@ -1,124 +1,86 @@
 <template>
   <div class="login-container">
-    <!-- Debug info -->
-    <div class="debug-info">
-      <p>Updated login to work with proper backend proxy configuration</p>
-    </div>
-    
-    <!-- HTML fallback form -->
-    <div class="fallback-form" style="margin: 20px; padding: 20px; background: white; border: 2px solid #333; border-radius: 8px;">
-      <h2 style="text-align: center; color: black; margin-bottom: 20px;">Login Form</h2>
+    <div class="login-card">
+      <div class="logo-container">
+        <div class="logo">
+          <v-icon size="40" color="white">mdi-tooth</v-icon>
+        </div>
+      </div>
       
-      <div style="margin-bottom: 15px;">
-        <label style="display: block; margin-bottom: 5px; color: black; font-weight: bold;">Username:</label>
-        <input 
-          type="text" 
-          v-model="username" 
-          style="width: 100%; padding: 10px; border: 1px solid #666; border-radius: 4px;"
+      <div class="app-title">OrthoDent Pro Access</div>
+      
+      <div class="login-form">
+        <div class="input-group">
+          <label>Používateľské meno</label>
+          <div class="input-with-icon">
+            <v-icon size="small" color="grey" class="input-icon">mdi-email-outline</v-icon>
+            <input 
+              type="email" 
+              v-model="username"
+            >
+          </div>
+        </div>
+        
+        <div class="input-group">
+          <label>Heslo</label>
+          <div class="input-with-icon">
+            <v-icon size="small" color="grey" class="input-icon">mdi-lock-outline</v-icon>
+            <input 
+              :type="showPassword ? 'text' : 'password'" 
+              v-model="password"
+            >
+            <v-icon 
+              size="small" 
+              color="grey" 
+              class="password-toggle"
+              @click="showPassword = !showPassword"
+            >
+              {{ showPassword ? 'mdi-eye-off' : 'mdi-eye' }}
+            </v-icon>
+          </div>
+        </div>
+        
+        <div v-if="loginError" class="error-message">
+          {{ loginError }}
+        </div>
+        
+        <button
+          @click="loginUser"
+          class="login-button"
+          :disabled="isLoading"
         >
-      </div>
-      
-      <div style="margin-bottom: 15px;">
-        <label style="display: block; margin-bottom: 5px; color: black; font-weight: bold;">Password:</label>
-        <div style="display: flex;">
-          <input 
-            type="password" 
-            v-model="password"
-            style="width: 100%; padding: 10px; border: 1px solid #666; border-radius: 4px;"
-          >
-          <button 
-            @click="generatePassword"
-            style="margin-left: 10px; padding: 10px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; white-space: nowrap;"
-            title="Generate a strong password"
-          >
-            Generate
-          </button>
-        </div>
-        <div v-if="generatedPassword" style="margin-top: 10px; padding: 10px; background: #f8f8f8; border: 1px dashed #999; border-radius: 4px;">
-          <p style="margin: 0; font-family: monospace; color: black;">Generated password: <strong>{{ generatedPassword }}</strong></p>
-          <small style="color: #666;">This password is compatible with the system's encryption. Copy it to a secure location.</small>
-          <button 
-            @click="useGeneratedPassword"
-            style="margin-top: 10px; padding: 5px 10px; background: #607D8B; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;"
-          >
-            Use this password
-          </button>
+          {{ isLoading ? 'Logging in...' : 'Login' }}
+        </button>
+        
+        <div class="form-footer">
         </div>
       </div>
-      
-      <div v-if="loginError" style="margin-top: 10px; padding: 10px; background: #ffebee; color: #d32f2f; border: 1px solid #ffcdd2; border-radius: 4px;">
-        {{ loginError }}
-      </div>
-      
-      <button 
-        @click="loginUser"
-        style="width: 100%; padding: 12px; background: #1867C0; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 20px;"
-      >
-        Login
-      </button>
     </div>
   </div>
 </template>
 
 <script>
-import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router'
+import { saveTokens } from '../utils/auth';
 
 export default {
   data() {
     return {
       username: '',
       password: '',
-      generatedPassword: '',
+      showPassword: false,
       loginError: '',
-      isLoading: false
+      isLoading: false,
+      generatedPassword: ''
     }
   },
   methods: {
     setAuthToken(token) {
-      localStorage.setItem('auth', token)
-    },
-    
-    setAccessLevels(token) {
-      localStorage.setItem('access_levels', token)
+      saveTokens(token);
     },
     
     goToDashboard() {
-      // Always redirect to statements after login
       this.$router.push({ name: 'statements' });
-    },
-    
-    generatePassword() {
-      // Generate a strong password that works with Werkzeug's password hashing
-      const length = 12;
-      const uppercaseChars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-      const lowercaseChars = 'abcdefghijklmnopqrstuvwxyz';
-      const numberChars = '0123456789';
-      const specialChars = '!@#$%^&*()_+[]{}|;:,.<>?';
-      
-      const allChars = uppercaseChars + lowercaseChars + numberChars + specialChars;
-      let password = '';
-      
-      // Ensure at least one char of each type
-      password += uppercaseChars.charAt(Math.floor(Math.random() * uppercaseChars.length));
-      password += lowercaseChars.charAt(Math.floor(Math.random() * lowercaseChars.length));
-      password += numberChars.charAt(Math.floor(Math.random() * numberChars.length));
-      password += specialChars.charAt(Math.floor(Math.random() * specialChars.length));
-      
-      // Fill the rest randomly
-      for (let i = 4; i < length; i++) {
-        password += allChars.charAt(Math.floor(Math.random() * allChars.length));
-      }
-      
-      // Shuffle the password
-      password = password.split('').sort(() => 0.5 - Math.random()).join('');
-      
-      this.generatedPassword = password;
-    },
-    
-    useGeneratedPassword() {
-      this.password = this.generatedPassword;
-      this.generatedPassword = '';
     },
     
     async loginUser() {
@@ -128,13 +90,11 @@ export default {
       try {
         console.log("Login attempt with:", this.username, this.password);
         
-        // Use the proper API URL from environment variables
         const baseURL = process.env.VUE_APP_API_URL || '';
         const url = `${baseURL}/employee/auth/login`;
         
         console.log(`Using API URL: ${url}`);
         
-        // First try with FormData (which is what one of the backend routes expects)
         try {
           console.log(`Trying FormData login to ${url}`);
           
@@ -153,16 +113,12 @@ export default {
             const data = await formResponse.json();
             console.log('Login successful with FormData!', data);
             
-            this.setAuthToken(data.jwt_token);
-            if (data.access_levels) {
-              this.setAccessLevels(JSON.stringify(data.access_levels));
-            }
+            saveTokens(data.jwt_token, data.access_levels);
             
             console.log("Redirecting to statements...");
             this.goToDashboard();
             return;
           } else if (formResponse.status === 404) {
-            // This is the expected error for invalid credentials
             const errorData = await formResponse.json();
             throw new Error(errorData.detail || 'Invalid username or password');
           } 
@@ -170,7 +126,6 @@ export default {
           console.error('FormData login attempt failed:', formError);
         }
         
-        // Then try with JSON format (for the second route handler)
         try {
           console.log(`Trying JSON login to ${url}`);
           
@@ -191,10 +146,7 @@ export default {
             const data = await jsonResponse.json();
             console.log('Login successful with JSON!', data);
             
-            this.setAuthToken(data.jwt_token);
-            if (data.access_levels) {
-              this.setAccessLevels(JSON.stringify(data.access_levels));
-            }
+            saveTokens(data.jwt_token, data.access_levels);
             
             console.log("Redirecting to statements...");
             this.goToDashboard();
@@ -204,7 +156,6 @@ export default {
           console.error('JSON login attempt failed:', jsonError);
         }
         
-        // If all attempts fail, throw a more descriptive error
         throw new Error('Login failed. Please check your credentials and try again, or contact support if the issue persists.');
         
       } catch (error) {
@@ -217,7 +168,6 @@ export default {
   },
   mounted() {
     console.log("Login component mounted using Options API");
-    // Check if already logged in
     if (localStorage.getItem('auth')) {
       console.log("User already logged in, redirecting...");
       this.goToDashboard();
@@ -226,20 +176,138 @@ export default {
 }
 </script>
 
-<style>
+<style scoped>
 .login-container {
-  width: 100%;
-  max-width: 500px;
-  margin: 40px auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f5f5f5;
+  padding: 20px;
 }
 
-.debug-info {
-  background: #ffeb3b;
-  color: #000;
-  text-align: center;
-  padding: 10px;
+.login-card {
+  width: 100%;
+  max-width: 360px;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-bottom: 20px;
+}
+
+.logo-container {
+  display: flex;
+  justify-content: center;
+  margin-top: 30px;
+  margin-bottom: 10px;
+}
+
+.logo {
+  width: 70px;
+  height: 70px;
+  background-color: #3f51b5;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.app-title {
+  font-size: 14px;
   margin-bottom: 20px;
-  font-weight: bold;
-  border: 2px solid #f57f17;
+  color: #333;
+}
+
+.login-form {
+  width: 85%;
+}
+
+.input-group {
+  margin-bottom: 20px;
+}
+
+.input-group label {
+  display: block;
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.input-with-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.input-icon {
+  position: absolute;
+  left: 10px;
+}
+
+.input-with-icon input {
+  width: 100%;
+  padding: 12px 12px 12px 40px;
+  border: none;
+  outline: none;
+  font-size: 14px;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  cursor: pointer;
+}
+
+.login-button {
+  width: 100%;
+  padding: 12px;
+  background-color: #3f51b5;
+  color: white;
+  border: none;
+  border-radius: 25px;
+  font-size: 16px;
+  font-weight: 500;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background-color 0.3s;
+}
+
+.login-button:hover {
+  background-color: #303f9f;
+}
+
+.login-button:disabled {
+  background-color: #9fa8da;
+  cursor: not-allowed;
+}
+
+.form-footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 20px;
+  font-size: 14px;
+}
+
+.footer-link {
+  color: #666;
+  text-decoration: none;
+}
+
+.footer-link:hover {
+  text-decoration: underline;
+}
+
+.error-message {
+  color: #f44336;
+  font-size: 14px;
+  margin-top: 10px;
+  margin-bottom: 10px;
 }
 </style>

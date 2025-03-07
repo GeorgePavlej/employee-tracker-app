@@ -10,6 +10,8 @@ import * as directives from 'vuetify/directives'
 
 import {VCalendar} from 'vuetify/labs/VCalendar'
 
+import { isAuthenticated } from './utils/auth'
+
 const vuetify = createVuetify({
     components: {
         ...components,
@@ -22,7 +24,6 @@ const app = createApp(App)
 app.use(vuetify)
 app.use(router)
 
-localStorage.removeItem('auth');
-localStorage.removeItem('access_levels');
+console.log('Starting app. Authentication status:', isAuthenticated() ? 'Authenticated' : 'Not authenticated')
 
 app.mount('#app')

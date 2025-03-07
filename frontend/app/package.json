@@ -2,7 +2,7 @@
   "name": "frontend",
   "version": "1.0.0",
   "scripts": {
-    "serve": "vue-cli-service serve --hot",
+    "serve": "vue-cli-service serve --hot --watch --poll=300",
     "build": "vue-cli-service build",
     "build:production": "echo \"Using API URL: $VUE_APP_API_URL\" && vue-cli-service build"
   },

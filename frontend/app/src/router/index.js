@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import LoginView from '../views/LoginView.vue'
 import Statements from '../views/Statements.vue'
+import { isAuthenticated } from '../utils/auth'
 
 const routes = [
   {
@@ -25,21 +26,17 @@ const router = createRouter({
   routes
 })
 
-// Navigation guard to check authentication
 router.beforeEach((to, from, next) => {
-  const isAuthenticated = localStorage.getItem('auth') !== null
+  const isAuth = isAuthenticated()
   
-  // If root path or statements, check authentication first
-  if ((to.path === '/' || to.path === '/statements') && !isAuthenticated) {
+  if ((to.path === '/' || to.path === '/statements') && !isAuth) {
     next({ name: 'login' });
     return;
   }
   
-  if (to.matched.some(record => record.meta.requiresAuth) && !isAuthenticated) {
-    // If the route requires auth and user is not authenticated, redirect to login
+  if (to.matched.some(record => record.meta.requiresAuth) && !isAuth) {
     next({ name: 'login' })
-  } else if (to.path === '/login' && isAuthenticated) {
-    // If user is already authenticated and tries to access login, redirect to statements
+  } else if (to.path === '/login' && isAuth) {
     next({ name: 'statements' })
   } else {
     next()
