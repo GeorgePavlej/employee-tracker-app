@@ -714,7 +714,7 @@ export default {
           })
           .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred while clocking out.');
+            alert('Nastala chyba pri odchode z práce.');
           });
     },
     startLunch() {
@@ -728,7 +728,7 @@ export default {
           })
           .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred while starting lunch.');
+            alert('Nastala chyba pri začiatku obeda.');
           });
     },
     endLunch() {
@@ -742,7 +742,7 @@ export default {
           })
           .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred while ending lunch.');
+            alert('Nastala chyba pri ukončení obeda.');
           });
     },
 
@@ -769,7 +769,7 @@ export default {
           })
           .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred while fetching logs.');
+            alert('Nastala chyba pri načítaní záznamov.');
           });
     },
 
@@ -777,7 +777,7 @@ export default {
     createShift() {
       const {employee_id, date, start_time, end_time} = this.shiftFormData;
       if (!employee_id || !date || !start_time || !end_time) {
-        alert('Please fill in all fields.');
+        alert('Prosím, vyplňte všetky polia.');
         return;
       }
 
@@ -800,7 +800,7 @@ export default {
             return res.json();
           })
           .then(() => {
-            alert('Shift created successfully.');
+            alert('Zmena bola úspešne vytvorená.');
             this.shiftFormData.employee_id = null;
             this.shiftFormData.date = '';
             this.shiftFormData.start_time = '';
@@ -831,7 +831,7 @@ export default {
       fetch(url)
           .then(async res => {
             if (!res.ok) {
-              let err = 'Error fetching shifts.';
+              let err = 'Chyba pri načítaní zmien.';
               try {
                 const data = await res.json();
                 err = data.detail || err;
@@ -854,7 +854,7 @@ export default {
     generateAttendanceReport() {
       const {employee_id, date_from, date_to} = this.reportFilter;
       if (!employee_id || !date_from || !date_to) {
-        alert('Please fill in all fields.');
+        alert('Prosím, vyplňte všetky polia.');
         return;
       }
 
@@ -866,7 +866,7 @@ export default {
           })
           .catch(error => {
             console.error('Error:', error);
-            alert('An error occurred while generating the report.');
+            alert('Nastala chyba pri generovaní správy.');
           });
     },
 
@@ -874,7 +874,7 @@ export default {
     submitLeaveRequest() {
       const {employee_id, start_date, end_date, reason} = this.leaveRequest;
       if (!employee_id || !start_date || !end_date) {
-        alert('Please fill in all required fields.');
+        alert('Prosím, vyplňte všetky povinné polia.');
         return;
       }
 
@@ -891,13 +891,13 @@ export default {
           .then(res => {
             if (!res.ok) {
               return res.json().then(data => {
-                throw new Error(data.detail || 'Error submitting leave request.');
+                throw new Error(data.detail || 'Chyba pri odosielaní žiadosti o dovolenku.');
               });
             }
             return res.json();
           })
           .then(() => {
-            alert('Leave request submitted successfully.');
+            alert('Žiadosť o dovolenku bola úspešne odoslaná.');
             this.leaveRequest.employee_id = null;
             this.leaveRequest.start_date = '';
             this.leaveRequest.end_date = '';
@@ -913,7 +913,7 @@ export default {
       fetch(`${baseURL}/leave_requests/`)
           .then(async res => {
             if (!res.ok) {
-              let err = 'Error fetching leave requests.';
+              let err = 'Chyba pri načítaní žiadostí o dovolenku.';
               try {
                 const data = await res.json();
                 err = data.detail || err;
@@ -938,13 +938,14 @@ export default {
           .then(res => {
             if (!res.ok) {
               return res.json().then(data => {
-                throw new Error(data.detail || 'Error updating leave request.');
+                throw new Error(data.detail || 'Chyba pri aktualizácii žiadosti o dovolenku.');
               });
             }
             return res.json();
           })
           .then(() => {
-            alert(`Leave request ${status.toLowerCase()} successfully.`);
+            const statusText = status === 'Approved' ? 'schválená' : 'zamietnutá';
+            alert(`Žiadosť o dovolenku bola úspešne ${statusText}.`);
             this.loadLeaveRequests();
           })
           .catch(error => {
@@ -956,7 +957,7 @@ export default {
     // ---- EMPLOYEE MANAGEMENT ----
     createEmployee() {
       if (!this.employeeFormData.name) {
-        alert('Please enter a name.');
+        alert('Prosím, zadajte meno.');
         return;
       }
       fetch(`${baseURL}/employees/`, {
@@ -967,13 +968,13 @@ export default {
           .then(res => {
             if (!res.ok) {
               return res.json().then(data => {
-                throw new Error(data.detail || 'Error creating employee.');
+                throw new Error(data.detail || 'Chyba pri vytváraní zamestnanca.');
               });
             }
             return res.json();
           })
           .then(newEmployee => {
-            alert('Employee created successfully.');
+            alert('Zamestnanec bol úspešne vytvorený.');
             this.employeeFormData.name = '';
             this.loadEmployees();
           })
@@ -983,14 +984,14 @@ export default {
           });
     },
     deleteEmployee(employeeId) {
-      if (!confirm('Are you sure you want to delete this employee?')) return;
+      if (!confirm('Ste si istí, že chcete vymazať tohto zamestnanca?')) return;
 
       fetch(`${baseURL}/employees/${employeeId}/`, {
         method: 'DELETE',
       })
           .then(async res => {
             if (!res.ok) {
-              let err = 'Error deleting employee.';
+              let err = 'Chyba pri odstraňovaní zamestnanca.';
               try {
                 const data = await res.json();
                 err = data.detail || err;
@@ -1001,7 +1002,7 @@ export default {
             return res.json();
           })
           .then(data => {
-            alert(data.message || 'Employee deleted successfully.');
+            alert(data.message || 'Zamestnanec bol úspešne odstránený.');
             this.loadEmployees();
           })
           .catch(error => {
@@ -1017,7 +1018,7 @@ export default {
     updateEmployee() {
       const {employee_id, name} = this.employeeFormData;
       if (!employee_id || !name) {
-        alert('Invalid data.');
+        alert('Neplatné údaje.');
         return;
       }
       fetch(`${baseURL}/employees/${employee_id}/`, {
@@ -1028,13 +1029,13 @@ export default {
           .then(res => {
             if (!res.ok) {
               return res.json().then(data => {
-                throw new Error(data.detail || 'Error updating employee.');
+                throw new Error(data.detail || 'Chyba pri aktualizácii zamestnanca.');
               });
             }
             return res.json();
           })
           .then(updatedEmployee => {
-            alert('Employee updated successfully.');
+            alert('Zamestnanec bol úspešne aktualizovaný.');
             this.cancelEdit();
             this.loadEmployees();
           })

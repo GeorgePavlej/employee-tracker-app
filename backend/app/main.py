@@ -19,6 +19,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from starlette.middleware.cors import CORSMiddleware
 from starlette.responses import JSONResponse
+from werkzeug.security import generate_password_hash
 
 from .auth import employee_auth_router
 
@@ -82,11 +83,11 @@ def create_employee(employee_data: EmployeeCreate, db: Session = Depends(get_db)
             "employee_id": new_employee.employee_id,
             "name": new_employee.name
         }
-    except SQLAlchemyError:
+    except SQLAlchemyError as error:
         db.rollback()
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Pri vytváraní nového zamestnanca došlo k chybe."
+            detail=f"Pri vytváraní nového zamestnanca došlo k chybe: {str(error)}"
         )
 
 
@@ -135,6 +136,10 @@ def delete_employee(employee_id: int, db: Session = Depends(get_db)):
         )
 
     try:
+        db.query(LeaveRequest).filter(LeaveRequest.employee_id == employee_id).delete()
+        db.query(Shift).filter(Shift.employee_id == employee_id).delete()
+        db.query(TimeLog).filter(TimeLog.employee_id == employee_id).delete()
+        
         db.delete(employee)
         db.commit()
         return {"message": "Zamestnanec bol úspešne odstránený."}
