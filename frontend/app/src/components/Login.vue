@@ -60,10 +60,10 @@
 </template>
 
 <script>
-import { useRouter } from 'vue-router'
 import { saveTokens } from '../utils/auth';
 
 export default {
+  name: 'Login',
   data() {
     return {
       username: '',
@@ -80,7 +80,7 @@ export default {
     },
     
     goToDashboard() {
-      this.$router.push({ name: 'statements' });
+      this.$router.push({ name: 'dashboard' });
     },
     
     async loginUser() {
@@ -115,7 +115,7 @@ export default {
             
             saveTokens(data.jwt_token, data.access_levels);
             
-            console.log("Redirecting to statements...");
+            console.log("Redirecting to dashboard...");
             this.goToDashboard();
             return;
           } else if (formResponse.status === 404) {
@@ -148,7 +148,7 @@ export default {
             
             saveTokens(data.jwt_token, data.access_levels);
             
-            console.log("Redirecting to statements...");
+            console.log("Redirecting to dashboard...");
             this.goToDashboard();
             return;
           }
@@ -310,4 +310,4 @@ export default {
   margin-top: 10px;
   margin-bottom: 10px;
 }
-</style>
+</style> 
